@@ -16,24 +16,29 @@ shlog_main ()
 {
 # Default log directory is the script dir. If set by parent script, unset LOGPATH to allow this script to construct it
 if [[ -z "$LOGDIR" ]]; then
-	LOGDIR="#customLogDir"
-elif [[ -z "$customLogDir" ]]; then
-	relativeLogDir=$(dirname "$0")
-	LOGDIR=$(cd "$relativeLogDir" && pwd)
+	if [[ -z "$customLogDir" ]]; then
+		relativeLogDir=$(dirname "$0")
+		LOGDIR=$(cd "$relativeLogDir" && pwd)
+	else
+		LOGDIR="$customLogDir"
+	fi
 else
 	unset LOGPATH
 fi
 
-# Check if LOGDIR exists and is not a directory. Try to create it if it doesnt
-if [[ -e "$LOGDIR" && ! -d "$LOGDIR" ]]; then
-	echo "ERROR! - LOGDIR exists but is not a directory. Exiting..."
-	exit 1
-else
+# Check if LOGDIR doesnt exist and try to create it. Check if it exists and that it is a directory and writable
+if [[ ! -e "$LOGDIR" ]]; then
 	mkdir -p "$LOGDIR"
 	if [[ $? -ne 0 ]]; then
-		echo "ERROR! - LOGDIR does not exist and can not be created. Exiting..."
+		echo "ERROR! - LOGDIR ($LOGDIR) does not exist and can not be created. Exiting..."
 		exit 1
 	fi
+elif [[ -e "$LOGDIR" && ! -d "$LOGDIR" ]]; then
+	echo "ERROR! - LOGDIR ($LOGDIR) exists but is not a directory. Exiting..."
+	exit 1
+elif [[ -e "$LOGDIR" && ! -w "$LOGDIR" ]]; then
+	echo "ERROR! - LOGDIR ($LOGDIR) exists but is not writable. Exiting..."
+	exit 1
 fi
 
 # Check if LOGDIR has a leading slash and add it if it doesnt
@@ -102,12 +107,10 @@ case "$1" in
 		local shlogTmpStamp="$2"
 		shift 2
 	;;
-
 	-p|--path)
 		local shlogTmpPath="$2"
 		shift 2
 	;;
-
 	*)
 		local shlogTmpText="$1"
 		shift
@@ -119,20 +122,24 @@ done
 shlog_main
 
 # Do the thing
-if [[ $shlogTmpStamp == "timestamp" && -n $shlogTmpText ]]; then
-	echo -e "$(date '+%H:%M:%S')" - "$shlogTmpText" | tee -a "$LOGPATH"
-elif [[ $shlogTmpStamp == "datestamp" && -n $shlogTmpText ]]; then
-	echo -e "$(date '+%Y-%m-%d %H:%M:%S')" - "$shlogTmpText" | tee -a "$LOGPATH"
-elif [[ $shlogTmpStamp == "weekstamp" && -n $shlogTmpText ]]; then
-	echo -e "$(date '+%H:%M:%S %d-%m-%Y %a %V')" - "$shlogTmpText" | tee -a "$LOGPATH"
-elif [[ $shlogTmpStamp == "timestamp" ]]; then
-	echo -e "$(date '+%H:%M:%S')" | tee -a "$LOGPATH"
-elif [[ $shlogTmpStamp == "datestamp" ]]; then
-	echo -e "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "$LOGPATH"
-elif [[ $shlogTmpStamp == "weekstamp" ]]; then
-	echo -e "$(date '+%H:%M:%S %d-%m-%Y %a %V')" | tee -a "$LOGPATH"
+if [[ -n $shlogTmpText ]]; then
+	if [[ $shlogTmpStamp == "timestamp" ]]; then
+		echo -e "$(date '+%H:%M:%S')" - "$shlogTmpText" | tee -a "$LOGPATH"
+	elif [[ $shlogTmpStamp == "datestamp" ]]; then
+		echo -e "$(date '+%Y-%m-%d %H:%M:%S')" - "$shlogTmpText" | tee -a "$LOGPATH"
+	elif [[ $shlogTmpStamp == "weekstamp" ]]; then
+		echo -e "$(date '+%H:%M:%S %d-%m-%Y %a %V')" - "$shlogTmpText" | tee -a "$LOGPATH"
+	else
+		echo -e "$shlogTmpText" | tee -a "$LOGPATH"
+	fi
 else
-	echo -e "$shlogTmpText" | tee -a "$LOGPATH"
+	if [[ $shlogTmpStamp == "timestamp" ]]; then
+		echo -e "$(date '+%H:%M:%S')" | tee -a "$LOGPATH"
+	elif [[ $shlogTmpStamp == "datestamp" ]]; then
+		echo -e "$(date '+%Y-%m-%d %H:%M:%S')" | tee -a "$LOGPATH"
+	elif [[ $shlogTmpStamp == "weekstamp" ]]; then
+		echo -e "$(date '+%H:%M:%S %d-%m-%Y %a %V')" | tee -a "$LOGPATH"
+	fi
 fi
 }
 
