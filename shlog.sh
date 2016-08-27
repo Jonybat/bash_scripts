@@ -94,9 +94,6 @@ fi
 ### Main function
 shlog ()
 {
-# Check/Set LOGPATH variable
-shlog_vars
-
 # Put the arguments in variables
 while [[ $# -gt 0 ]]; do
 case "$1" in
@@ -114,6 +111,9 @@ case "$1" in
 	;;
 esac
 done
+
+# Check/Set LOGPATH variable
+shlog_vars
 
 # Do the thing
 if [[ -n $shlogTmpText ]]; then
