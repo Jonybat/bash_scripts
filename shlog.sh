@@ -33,10 +33,10 @@ if [[ ! -e "$LOGDIR" ]]; then
 		echo "ERROR! - LOGDIR ($LOGDIR) does not exist and can not be created. Exiting..."
 		exit 1
 	fi
-elif [[ -e "$LOGDIR" && ! -d "$LOGDIR" ]]; then
+elif [[ ! -d "$LOGDIR" ]]; then
 	echo "ERROR! - LOGDIR ($LOGDIR) exists but is not a directory. Exiting..."
 	exit 1
-elif [[ -e "$LOGDIR" && ! -w "$LOGDIR" ]]; then
+elif [[ ! -w "$LOGDIR" ]]; then
 	echo "ERROR! - LOGDIR ($LOGDIR) exists but is not writable. Exiting..."
 	exit 1
 fi
