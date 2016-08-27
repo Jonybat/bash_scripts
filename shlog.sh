@@ -6,21 +6,21 @@
 #
 ### To be sourced from other scripts
 # Defines and uses the following variables globally: LOGDIR, LOGFILE, LOGPATH
-# Variables can be set by parent script or can be defined with the shlog_vars function
+# These variables can be set by parent script or can be defined with the shlog_vars function
 #
-### Settings
-customLogDir="/var/log/scripts/"
+### Can change this variable to set a default global directory. Can still be overridden by the global variables
+globalLogDir="/var/log/scripts/"
 
 ### Define the LOGPATH variable
 shlog_vars ()
 {
-# Default log directory is the script dir. If set by parent script, unset LOGPATH to allow this script to construct it
+# Default log directory is the script dir. If set by parent script, unset LOGPATH to allow this script to build it
 if [[ -z "$LOGDIR" ]]; then
-	if [[ -z "$customLogDir" ]]; then
+	if [[ -z "$globalLogDir" ]]; then
 		relativeLogDir=$(dirname "$0")
 		LOGDIR=$(cd "$relativeLogDir" && pwd)
 	else
-		LOGDIR="$customLogDir"
+		LOGDIR="$globalLogDir"
 	fi
 else
 	unset LOGPATH
@@ -82,17 +82,20 @@ if [[ -z "$LOGPATH" ]]; then
 fi
 }
 
-shlog_help (){
+shlog_help ()
+{
+# Check if no arguments were given and print usage message
 if [[ $# -eq 0 ]]; then
 	echo "Usage: shlog [-p|--path=nolog|/alternative/path/alternative.log] [-s|--stamp=timestamp|datestamp|weekstamp] \"text\"|\"\$(cmd)\""
 	exit 1
 fi
 }
 
-
 ### Main function
 shlog ()
 {
+# Check/Set LOGPATH variable
+shlog_vars
 
 # Put the arguments in variables
 while [[ $# -gt 0 ]]; do
@@ -111,9 +114,6 @@ case "$1" in
 	;;
 esac
 done
-
-# Check/Set LOGPATH variable
-shlog_vars
 
 # Do the thing
 if [[ -n $shlogTmpText ]]; then
@@ -136,7 +136,6 @@ else
 	fi
 fi
 }
-
 
 ### Throw warning if run from a shell
 if [[ $0 =~ .*shlog ]]; then
