@@ -5,14 +5,14 @@
 # Requires: tee
 #
 ### To be sourced from other scripts
-# Defines and uses the following variables globally, can be set by parent script
-# LOGDIR, LOGFILE, LOGPATH
+# Defines and uses the following variables globally: LOGDIR, LOGFILE, LOGPATH
+# Variables can be set by parent script or can be defined with the shlog_vars function
 #
 ### Settings
 customLogDir="/var/log/scripts/"
 
 ### Define the LOGPATH variable
-shlog_main ()
+shlog_vars ()
 {
 # Default log directory is the script dir. If set by parent script, unset LOGPATH to allow this script to construct it
 if [[ -z "$LOGDIR" ]]; then
@@ -79,8 +79,6 @@ if [[ -z "$LOGPATH" ]]; then
 	else
 		LOGPATH="$LOGDIR$LOGFILE"
 	fi
-else
-	echo "LOGPATH was set by main script. DEBUG: $LOGPATH"
 fi
 }
 
@@ -90,10 +88,6 @@ if [[ $# -eq 0 ]]; then
 	exit 1
 fi
 }
-
-
-### First run to make the LOGPATH variable available to the parent script
-shlog_main
 
 
 ### Main function
@@ -119,7 +113,7 @@ esac
 done
 
 # Check/Set LOGPATH variable
-shlog_main
+shlog_vars
 
 # Do the thing
 if [[ -n $shlogTmpText ]]; then
