@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 . /opt/scripts/shlog.sh
+testLogDir=/opt/scripts/test
 
 shlog "1"
 
@@ -12,9 +13,9 @@ shlog -s timestamp "time"
 shlog -s datestamp "date"
 shlog -s weekstamp "week"
 
-shlog -p /home/ptins573/files/dev/bash_scripts/test/logs_alt/ "dir 1"
+shlog -p $testLogDir/logs_alt/ "dir 1"
 shlog -p alt.log "file 1"
-shlog -p /home/ptins573/files/dev/bash_scripts/test/logs_alt/alt.log "path 1"
+shlog -p $testLogDir//logs_alt/alt.log "path 1"
 
 shlog "2"
 
@@ -22,14 +23,14 @@ LOGFILE=logfile.log
 
 shlog "3"
 
-LOGDIR=/home/ptins573/files/dev/bash_scripts/test/logs/
+LOGDIR=$testLogDir/logs/
 
 shlog "4"
 
-LOGDIR=/home/ptins573/files/dev/bash_scripts/test/logs/logpath.log
+LOGDIR=$testLogDir/logs/logpath.log
 
 shlog "5"
 
-shlog -p /home/ptins573/files/dev/bash_scripts/test/logs_alt/ "dir 2"
+shlog -p $testLogDir/logs_alt/ "dir 2"
 shlog -p alt.log "file 2"
-shlog -p /home/ptins573/files/dev/bash_scripts/test/logs_alt/alt.log "path 2
+shlog -p $testLogDir/logs_alt/alt.log "path 2
