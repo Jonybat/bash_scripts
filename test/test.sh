@@ -15,7 +15,7 @@ shlog -s weekstamp "week"
 
 shlog -p $testLogDir/logs_alt/ "dir 1"
 shlog -p alt.log "file 1"
-shlog -p $testLogDir//logs_alt/alt.log "path 1"
+shlog -p $testLogDir/logs_alt/alt.log "path 1"
 
 shlog "2"
 
