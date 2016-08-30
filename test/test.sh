@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 . /opt/scripts/shlog.sh
-testLogDir=/opt/scripts/test
+testDir=/opt/scripts/test
 
-shlog "1"
+shlog "default/test.log (1)"
 
 shlog -s timestamp
 shlog -s datestamp
@@ -13,24 +13,39 @@ shlog -s timestamp "time"
 shlog -s datestamp "date"
 shlog -s weekstamp "week"
 
-shlog -p $testLogDir/logs_alt/ "dir 1"
-shlog -p alt.log "file 1"
-shlog -p $testLogDir/logs_alt/alt.log "path 1"
+shlog -p $testDir/logs_alt/ "logs_alt/test.log (1)"
+shlog -p alt.log "default/alt.log (1)"
+shlog -p $testDir/logs_alt/alt.log "logs_alt/alt.log (1)"
 
-shlog "2"
+shlog "default/test.log (2)"
 
 LOGFILE=logfile.log
 
-shlog "3"
+shlog "default/logfile.log"
 
-LOGDIR=$testLogDir/logs/
+LOGDIR=$testDir/log/
 
-shlog "4"
+shlog "default/logdir.log"
 
-LOGDIR=$testLogDir/logs/logpath.log
+LOGDIR=$testDir/log/logpath.log
 
-shlog "5"
+shlog "default/logpath.log"
 
-shlog -p $testLogDir/logs_alt/ "dir 2"
-shlog -p alt.log "file 2"
-shlog -p $testLogDir/logs_alt/alt.log "path 2
+shlog -p $testDir/logs_alt/ "logs_alt/test.log (2)"
+shlog -p alt.log "default/alt.log (2)"
+shlog -p $testDir/logs_alt/alt.log "logs_alt/alt.log (2)"
+
+echo "
+----------
+"
+grep -qo "default/test.log (1)" $testDir/log/test.log 2>/dev/null && echo "default/test.log (1) OK" || echo "default/test.log (1) Failed"
+grep -qo "logs_alt/test.log (1)" $testDir/logs_alt/test.log 2>/dev/null && echo "logs_alt/test.log (1) OK" || echo "logs_alt/test.log (1) Failed"
+grep -qo "default/alt.log (1)" $testDir/log/alt.log 2>/dev/null && echo "default/alt.log (1) OK" || echo "default/alt.log (1) Failed"
+grep -qo "logs_alt/alt.log (1)" $testDir/logs_alt/alt.log 2>/dev/null && echo "logs_alt/alt.log (1) OK" || echo "logs_alt/alt.log (1) Failed"
+grep -qo "default/test.log (2)" $testDir/log/test.log 2>/dev/null && echo "default/test.log (2) OK" || echo "default/test.log (2) Failed"
+grep -qo "default/logfile.log" $testDir/log/logfile.log 2>/dev/null && echo "default/logfile.log OK" || echo "default/logfile.log Failed"
+grep -qo "default/logdir.log" $testDir/log/logdir.log 2>/dev/null && echo "default/logdir.log OK" || echo "default/logdir.log Failed"
+grep -qo "default/logpath.log" $testDir/log/logpath.log 2>/dev/null && echo "default/logpath.log OK" || echo "default/logpath.log Failed"
+grep -qo "logs_alt/test.log (2)" $testDir/logs_alt/test.log 2>/dev/null && echo "logs_alt/test.log (2) OK" || echo "logs_alt/test.log (2) Failed"
+grep -qo "default/alt.log (2)" $testDir/log/alt.log 2>/dev/null && echo "default/alt.log (2) OK" || echo "default/alt.log (2) Failed"
+grep -qo "logs_alt/alt.log (2)" $testDir/logs_alt/alt.log 2>/dev/null && echo "logs_alt/alt.log (2) OK" || echo "logs_alt/alt.log (2) Failed"
