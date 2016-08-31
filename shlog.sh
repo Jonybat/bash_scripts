@@ -120,6 +120,23 @@ fi
 
 }
 
+shlog_global_vars ()
+{
+case "$1" in
+	-s|--set)
+                shlog_vars
+                LOGDIR="$shlogDir"
+                LOGFILE="$shlogFile"
+                LOGPATH="$shlogPath"
+	;;
+        -u|--unset)
+                LOGDIR=""
+                LOGFILE=""
+                LOGPATH=""
+	;;
+esac
+}
+
 shlog_help ()
 {
 # Check if no arguments were given and print usage message
