@@ -12,11 +12,11 @@
 globalLogDir="/var/log/scripts/"
 
 
-shlog_validate_dir ()
+shlog_check_dir ()
 {
 # Check if dir doesnt exist and try to create it. Check if it exists and that it is a directory and writable
 if [[ ! -e "$1" ]]; then
-	mkdir -p "$1"
+	mkdir -p "$1" 2>/dev/null
 	if [[ $? -ne 0 ]]; then
 		echo "ERROR! - shlogDir ($1) does not exist and can not be created. Exiting..."
 		exit 1
@@ -28,7 +28,33 @@ elif [[ ! -w "$1" ]]; then
 	echo "ERROR! - shlogDir ($1) exists but is not writable. Exiting..."
 	exit 1
 fi
+}
 
+shlog_check_path ()
+{
+# Try to create the file or if it exists, check it it is writable
+if [[ ! -e "$1" ]]; then
+	touch "$1" 2>/dev/null
+	if [[ $? -ne 0 ]]; then
+		# Check if we have access to the dir or if we can create it
+		shlog_check_dir "$(echo "$1" | grep -Eo '\/([^/]+\/)+')"
+		# If we are still here, try to create it again
+		touch "$1" 2>/dev/null
+		if [[ $? -ne 0 ]]; then
+			echo "ERROR! - shlogPath ($1) does not exist and can not be created. Exiting..."
+			exit 1
+		fi
+	fi
+elif [[ ! -w "$1" ]]; then
+        echo "ERROR! - shlogPath ($1) exists but is not writable. Exiting..."
+        exit 1
+fi
+
+# Set shlogPath
+}
+
+shlog_validate_dir ()
+{
 # Check if dir has a leading slash and add it if it doesnt
 if [[ ! "$1" =~ /$ ]]; then
 	shlogDir="$1"/
@@ -42,7 +68,7 @@ shlog_logdir ()
 # If LOGDIR has not been set by the parent script, check if the globalLogDir has been set in this script. If neither applies, set shlogDir based on the script dir
 if [[ -z "$LOGDIR" ]]; then
 	if [[ -z "$globalLogDir" ]]; then
-		relativeLogDir=$(dirname "$0")
+		local relativeLogDir=$(dirname "$0")
 		shlogDir=$(cd "$relativeLogDir" && pwd)
 	else
 		shlogDir="$globalLogDir"
@@ -78,24 +104,19 @@ if [[ -n "$shlogTmpPath" ]]; then
 	elif [[ "$shlogTmpPath" =~ \/([^/]+\/)+[^/]+\.[^/]{1,3} ]]; then
 		shlogPath="$shlogTmpPath"
 
-		# TODO: Validate shlogTmpPath (as full path)
-
 	# Input is a dir, append default filename
 	elif [[ "$shlogTmpPath" =~ \/([^/]+\/)+ ]]; then
 		# Validate and populate shlogDir
 		shlog_validate_dir "$shlogTmpPath"
-
 		# Populate shlogFile
 		shlog_logfile
-
 		shlogPath="$shlogDir$shlogFile"
 
 	# Input is a filename, append default dir
 	elif [[ "$shlogTmpPath" =~ [^/]+\.[^/]{1,3} ]]; then
-		# Populate $shlogDir
+		# Populate shlogDir
 		shlog_logdir
 		shlog_validate_dir "$shlogDir"
-
 		shlogPath="$shlogDir$shlogTmpPath"
 	fi
 	# TODO: Needed?
@@ -106,18 +127,16 @@ elif [[ -z "$LOGPATH" ]]; then
 	# Get shlogDir and shlogFile
 	shlog_logdir
 	shlog_validate_dir "$shlogDir"
-
 	shlog_logfile
-
 	shlogPath="$shlogDir$shlogFile"
 
+# LOGPATH is set
 else
-	# TODO: Validate LOGPATH
 	shlogPath="$LOGPATH"
 fi
 
-# TODO: Validate shlogPath
-
+# Validate shlogPath
+shlog_check_path "$shlogPath"
 }
 
 shlog_global_vars ()
