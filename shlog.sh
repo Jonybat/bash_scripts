@@ -37,10 +37,9 @@ else
 fi
 }
 
-
 shlog_logdir ()
 {
-# Default log directory is the script dir. If set by parent script, unset shlogPath to allow this script to build it
+# If LOGDIR has not been set by the parent script, check if the globalLogDir has been set in this script. If neither applies, set shlogDir based on the script dir
 if [[ -z "$LOGDIR" ]]; then
 	if [[ -z "$globalLogDir" ]]; then
 		relativeLogDir=$(dirname "$0")
@@ -50,14 +49,12 @@ if [[ -z "$LOGDIR" ]]; then
 	fi
 else
 	shlogDir="$LOGDIR"
-#	unset shlogPath
 fi
 }
 
-
 shlog_logfile ()
 {
-# If not set by the parent script, get its name, filter the path and replace extension with .log, if it has one
+# If LOGFILE has not been set by the parent script, get its name, filter the path and replace extension with .log, if it has one
 if [[ -z "$LOGFILE" ]]; then
 	if [[ "$0" =~ \.sh ]]; then
 		shlogFile=$(echo "$0" | sed 's/.*\///' | sed 's/sh$/log/')
@@ -66,12 +63,9 @@ if [[ -z "$LOGFILE" ]]; then
 	fi
 else
 	shlogFile="$LOGFILE"
-#	unset shlogPath
 fi
 }
 
-
-### Define the shlogPath variable
 shlog_vars ()
 {
 # -p flag set
@@ -88,10 +82,10 @@ if [[ -n "$shlogTmpPath" ]]; then
 
 	# Input is a dir, append default filename
 	elif [[ "$shlogTmpPath" =~ \/([^/]+\/)+ ]]; then
-		# Validate and populate $shlogDir
+		# Validate and populate shlogDir
 		shlog_validate_dir "$shlogTmpPath"
 
-		# Populate $shlogFile
+		# Populate shlogFile
 		shlog_logfile
 
 		shlogPath="$shlogDir$shlogFile"
@@ -103,15 +97,13 @@ if [[ -n "$shlogTmpPath" ]]; then
 		shlog_validate_dir "$shlogDir"
 
 		shlogPath="$shlogDir$shlogTmpPath"
-
 	fi
-
 	# TODO: Needed?
 	unset shlogTmpPath
 
-# $shlogPath not defined
+# LOGPATH not defined, build it based on LOGDIR and LOGFILE
 elif [[ -z "$LOGPATH" ]]; then
-	# Get $shlogDir and $shlogFile
+	# Get shlogDir and shlogFile
 	shlog_logdir
 	shlog_validate_dir "$shlogDir"
 
@@ -124,10 +116,9 @@ else
 	shlogPath="$LOGPATH"
 fi
 
-# TODO: Validate $shlogPath
+# TODO: Validate shlogPath
 
 }
-
 
 shlog_help ()
 {
@@ -139,13 +130,9 @@ fi
 }
 
 
+### Main function
 shlog ()
 {
-# Store variables and restore them after -p run
-#LOGPATH="$shlogPath"
-#LOGDIR="$shlogDir"
-#LOGFILE="$shlogFile"
-
 # Put the arguments in variables
 while [[ $# -gt 0 ]]; do
 case "$1" in
@@ -164,7 +151,7 @@ case "$1" in
 esac
 done
 
-### Check/Set shlogPath variable
+# Set shlogPath variable
 shlog_vars
 
 # Do the thing
@@ -192,6 +179,7 @@ unset shlogPath
 unset shlogDir
 unset shlogFile
 }
+
 
 ### Throw warning if run from a shell
 if [[ $0 =~ .*shlog ]]; then
