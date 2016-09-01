@@ -15,6 +15,7 @@
 # - plainlog setting instead of path, specify filename with shlog -p
 # - deb packages
 # - ts3 version (non specific, like extra info to show on header)
+# - 7zr to 7za, problem?
 
 . /opt/scripts/shlog.sh
 
@@ -112,8 +113,10 @@ fi
 
 backup_settings ()
 {
+# Populate the vars
 backup_vars
-echo ""
+
+shlog " "
 if [[ ${#sourceDir[*]} -ne 0 ]]; then
         shlog "Folders and files to copy: \e[0;32m${#sourceDir[*]}\e[0m"
         settings=$(($settings+1))
@@ -147,7 +150,7 @@ if [[ -n $cloneDir ]]; then
 else
         shlog "Root filesystem cloning: \e[0;31mNO\e[0m"
 fi
-echo ""
+shlog " "
 }
 
 
@@ -181,21 +184,19 @@ case "$1" in
 backup_source_config "$2"
 
 shlog " "
-echo "Starting backup. Using config file: $2"
-echo ""
 shlog " "
-shlog -s weekstamp
+shlog -s weekstamp "Using config file: $2"
 
 # Print the current backup settings
 backup_settings
 
-mkdir -p $tmpPath || critical_exit "Unable to create the temporary directory!"
+mkdir -p "$tmpPath" || critical_exit "Unable to create the temporary directory!"
 
 ### Folders and files backup
 for dir in ${!sourceDir[*]}
         do
         if [[ -e ${sourceDir[$dir]} ]]; then
-                rsync $rsyncArgs ${sourceDir[$dir]} $tmpPath
+                rsync $rsyncArgs "${sourceDir[$dir]}" "$tmpPath"
                 warning_catch "The files backup process failed in '${sourceDir[$dir]}'. Check the file permissions." "'${sourceDir[$dir]}' copied successfully."
         else
                 warning=$(($warning+1))
@@ -208,8 +209,8 @@ done
 
 ### FTP backup
 if [[ $backupFtp -eq 1 ]]; then
-        if mkdir -p $ftpPath; then
-                ncftpget $ftpArgs $ftpHost $ftpPath /
+        if mkdir -p "$ftpPath"; then
+                ncftpget $ftpArgs $ftpHost "$ftpPath" /
                 error_catch "The FTP files backup failed. Check the settings." "All the FTP files were copied successfully."
         else
                 shlog -s timestamp "\e[0;31mERROR!\e[0m - Unable to create the FTP directory"
@@ -223,7 +224,7 @@ if [[ $backupMysql -eq 1 ]]; then
         else
                 TMPVAR="All the databases were copied successfully to '$sqlPath'."
         fi
-        mysqldump $mysqlArgs $mysqlDb > $sqlPath
+        mysqldump $mysqlArgs $mysqlDb > "$sqlPath"
         error_catch "The MySQL database backup failed. Check the settings." "$TMPVAR"
 fi
 
@@ -233,14 +234,14 @@ cd $tmpDir || critical_exit "Unable to change to the temporary directory!"
 if [[ $settings -ne 0 ]]; then
         # Compress the backup files and move to the destination or just move the folder
         if [[ $tarBackup -eq 1 ]]; then
-                tar $tarArgs $dateStamp | 7zr $compressorArgs $compressedFile
+                tar $tarArgs $dateStamp | 7za $compressorArgs $compressedFile 2>1 >/dev/null
                 error_catch "Unable to create the 7z file in '$compressedPath'." "The 7z file was created successfully in '$compressedPath'."
                 dir_cleanup
-                mv $compressedFile $backupDir
+                mv $compressedFile "$backupDir"
                 error_catch "Unable to move the compressed file to '$backupDir'." "The compressed file was moved successfully to '$backupDir'."
         else
                 dir_cleanup
-                mv $dateStamp $backupDir
+                mv $dateStamp "$backupDir"
                 error_catch "Unable to move the backup folder to '$backupDir'." "The backup folder was moved successfully to '$backupDir'."
         fi
 else
@@ -249,7 +250,7 @@ else
 fi
 
 ### Extra backup copy
-if [ -n "$extraBackupDir" ]; then
+if [ -n $extraBackupDir ]; then
 
 	# Change dir to the extra backup dir to get all the available space
 	cd "$extraBackupDir"
@@ -258,22 +259,22 @@ if [ -n "$extraBackupDir" ]; then
 	cd "$backupDir"
         if [ "$tarBackup" -eq 1 ];
 		# Clean the destination dir before copying
-		dir_cleanup $extraBackupDir $extraBackupDirSize
+		dir_cleanup "$extraBackupDir" $extraBackupDirSize
                 then
-                        cp $cpArgs $compressedFile $extraBackupDir
+                        cp $cpArgs $compressedFile "$extraBackupDir"
                         error_catch "Unable to copy the compressed file to '$extraBackupDir'." "The compressed file was copied successfully to '$extraBackupDir'."
                 else
-                        cp $cpArgs $backupPath $extraBackupDir
+                        cp $cpArgs "$backupPath" "$extraBackupDir"
                         error_catch "Unable to copy the backup folder to '$extraBackupDir'." "The backup folder was copied successfully to '$extraBackupDir'."
         fi
 fi
 
 ### Root FS clone
-if [ -n "$cloneDir" ]; then
-        rsync $rsyncArgsRootfs / $cloneDir
+if [ -n $cloneDir ]; then
+        rsync "$rsyncArgsRootfs" / "$cloneDir"
         warning_catch "The root filesystem cloning to '$cloneDir' ended with errors." "The root filesystem cloning to '$cloneDir' ended successfully."
         echo "Running "
-        $cloneDirScript
+        "$cloneDirScript"
 fi
 
 ### Output final script report
@@ -287,10 +288,14 @@ else
 fi
 echo ""
 
+# Get LOGPATH from shlog
+shlog_global_vars -s
+
 ### Create a non colored log file if set above
 if [[ -n $plainLog ]]; then
-        cp $LOGPATH $plainLog
-        sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" $plainLog
+	plainLogFile="$LOGPATH.plain"
+        cp "$LOGPATH" "$plainLogFile"
+        sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" "$plainLogFile"
 fi
 ;;
 
