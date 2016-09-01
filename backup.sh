@@ -250,7 +250,7 @@ else
 fi
 
 ### Extra backup copy
-if [ -n $extraBackupDir ]; then
+if [[ -n $extraBackupDir ]]; then
 
 	# Change dir to the extra backup dir to get all the available space
 	cd "$extraBackupDir"
@@ -270,8 +270,8 @@ if [ -n $extraBackupDir ]; then
 fi
 
 ### Root FS clone
-if [ -n $cloneDir ]; then
-        rsync "$rsyncArgsRootfs" / "$cloneDir"
+if [[ -n $cloneDir ]]; then
+        rsync $rsyncArgsRootfs / "$cloneDir"
         warning_catch "The root filesystem cloning to '$cloneDir' ended with errors." "The root filesystem cloning to '$cloneDir' ended successfully."
         echo "Running "
         "$cloneDirScript"
