@@ -1,0 +1,116 @@
+##### BACKUP DIRECTORY #####
+# - Make sure that user running the script has permissions to write in the backup directory.
+#
+backupDir="/backup/"
+#
+### MAXIMUM SIZE OF THE BACKUP DIRECTORY ###
+# - Specify the maximum size for the backup folder, in KB, without the denominator.
+#
+maxDirSize="5000000"
+#
+### COMPRESS BACKUP FOLDER ###
+# - To compress the backup folder set "1" below, otherwise set to "0" or leave unset.
+#
+tarBackup="1"
+#
+### TEMPORARY DIRECTORY ###
+# - Full path of the directory where all files will be copied to during the backup.
+#
+tmpDir="/tmp"
+#
+### EXTRA DIRECTORY ###
+# - Full path to another directory where the backup will be cloned to, otherwise leave unset.
+#
+extraBackupDir="/mnt/archive/"
+
+
+##### DIRECTORIES AND FILES TO BACKUP #####
+# - To add a directory or file, just add a line like "sourceDir[x]=/path/to/folder/or/file.txt",
+#  where "x" is a number higher than the existing ones.
+# - Make sure that user running the script has permissions to read the folders and files.
+#
+sourceDir[1]=/home/user/
+
+
+##### DIRECTORIES AND FILES TO EXCLUDE FROM THE BACKUP #####
+# - To exclude a directory or file, just add a line like "rsyncExcludes[x]=/folder/or/file.txt",
+#  where "x" is a number higher than the existing ones.
+#
+rsyncExcludes[1]=Cache
+rsyncExcludes[2]=cache
+rsyncExcludes[3]=Logs
+rsyncExcludes[4]=logs
+rsyncExcludes[5]=*.log*
+
+
+##### BACKUP FILES FROM FTP #####
+# - To backup files from FTP set "1" bellow, otherwise set to "0" or leave unset.
+#
+backupFtp="1"
+#
+### FTP SERVER ###
+# - Address of the FTP server.
+#
+ftpHost=""
+#
+### FTP USERNAME ###
+# - Username to access the FTP server.
+#
+ftpUser=""
+#
+### FTP PASSWORD ###
+# - Password of the account selected previouslly.
+#
+ftpPass=""
+#
+### FTP DESTINATION FOLDER ###
+# - Name of the folder in the backup archive where all the FTP files will be stored..
+#
+ftpDir="ftp"
+
+
+##### BACKUP MYSQL DATABASES #####
+# - To backup MySQL databases set "1" bellow, otherwise set to "0" or leave unset.
+#
+backupMysql="1"
+#
+### MYSQL SERVER ###
+# - Address of the MySQL server to backup.
+#
+mysqlHost="localhost"
+#
+### MYSQL USERNAME ###
+# - Username to acess the MySQL database.
+#
+mysqlUser="user"
+#
+### MYSQL PASSWORD ###
+# - Password of the account selected previouslly.
+#
+mysqlPass="pass"
+#
+### MYSQL DATABASE ###
+# - Set the name of the database to backup. To backup all set to "-A".
+#
+mysqlDb="db_name"
+#
+### SQL FILE NAME ###
+#
+sqlFile="backup.sql"
+
+
+##### ROOT DIR CLONING #####
+# - Full path to the directory where the root fs will be cloned to, otherwise leave unset.
+#
+cloneDir="/mnt/backupfs/"
+#
+### POST CLONING SCRIPT
+# - Script to run after cloning the root filesystem
+#
+cloneDirScript="/opt/scripts/clonedir_installer.sh"
+
+
+##### PLAIN TEXT LOG #####
+# - Set to "1" to create a log file without colors, otherwise set to "0" or leave unset.
+#
+plainLog="1"
