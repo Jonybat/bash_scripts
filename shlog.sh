@@ -49,8 +49,6 @@ elif [[ ! -w "$1" ]]; then
         echo "ERROR! - shlogPath ($1) exists but is not writable. Exiting..."
         exit 1
 fi
-
-# Set shlogPath
 }
 
 shlog_validate_dir ()
@@ -119,7 +117,7 @@ if [[ -n "$shlogTmpPath" ]]; then
 		shlog_validate_dir "$shlogDir"
 		shlogPath="$shlogDir$shlogTmpPath"
 	fi
-	# TODO: Needed?
+	# Unset var to avoid running unnecessary tests when -p flag was not set
 	unset shlogTmpPath
 
 # LOGPATH not defined, build it based on LOGDIR and LOGFILE

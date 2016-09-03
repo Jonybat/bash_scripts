@@ -3,19 +3,17 @@
 ### Backup script
 #
 # Requires:
-# - rsync               (to backup files and folders)
-# - cp                  (to create a copy of the backup)
-# - ncftp               (to download files from FTP servers)
-# - mysqldump           (to backup MySQL databases)
-# - tar                 (to archive the backup folder)
-# - p7zip               (to compress the backup file)
+# - rsync		(to backup files and folders)
+# - cp			(to create a copy of the backup)
+# - ncftp		(to download files from FTP servers)
+# - mysqldump		(to backup MySQL databases)
+# - tar			(to archive the backup folder)
+# - 7za (p7zip)		(to compress the backup file)
 ###
 
 # TODO
-# - plainlog setting instead of path, specify filename with shlog -p
-# - deb packages
-# - ts3 version (non specific, like extra info to show on header)
-# - 7zr to 7za, problem?
+# - extra info on header
+# - pre commands to include on backup
 
 . /opt/scripts/shlog.sh
 
@@ -153,7 +151,6 @@ fi
 shlog " "
 }
 
-
 backup_source_config ()
 {
 # Check if config file argument was specified and if it is readable, then source it
@@ -176,6 +173,7 @@ backup_help ()
 echo "Usage: $0 [start|status|settings] [config_file]"
 exit 1
 }
+
 
 case "$1" in
 'start')
