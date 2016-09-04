@@ -92,20 +92,20 @@ if [[ $tarBackup -eq 1 ]]; then
 else
         backupSize=$(du -s $dateStamp | awk '{print $1}')
 fi
-if [[ $backupSize -lt $maxDirSize ]]; then
-        cd $backupDir
-        dirSpace=$(($maxDirSize - $(du -s | awk '{print $1}')))
+if [[ $backupSize -gt $2 ]]; then
+	error=$(($error+1))
+	shlog -s timestamp "\e[0;31mERROR!\e[0m - The total size of the backup is bigger than the destination directory ($1)"
+else
+	cd $1
+        dirSpace=$(($2 - $(du -s | awk '{print $1}')))
         while [[ $backupSize -gt $dirSpace ]]; do
                 shlog -s timestamp "\e[0;36mINFO\e[0m   - Backup size: ${backupSize}KB - Free space in the destination directory: ${dirSpace}KB"
-                OLDERBACKUP=$(ls -lt | awk '{print $9}'|tail -1)
-                rm -rfv $OLDERBACKUP
-                dirSpace=$(($maxDirSize - $(du -s | awk '{print $1}')))
+                oldestBackup=$(ls -lt | awk '{print $9}'|tail -1)
+                rm -rfv $oldestBackup
+                dirSpace=$(($2 - $(du -s | awk '{print $1}')))
                 shlog -s timestamp "\e[0;36mINFO\e[0m   - Free space after cleanup: ${dirSpace}KB"
         done
         cd - >/dev/null
-else
-        rm -rf $dateStamp*
-        critical_exit "The total size of the backup is bigger than the backup directory '$backupDir'"
 fi
 }
 
@@ -234,11 +234,11 @@ if [[ $settings -ne 0 ]]; then
         if [[ $tarBackup -eq 1 ]]; then
                 tar $tarArgs $dateStamp | 7za $compressorArgs $compressedFile 2>1 >/dev/null
                 error_catch "Unable to create the 7z file in '$compressedPath'." "The 7z file was created successfully in '$compressedPath'."
-                dir_cleanup
+                dir_cleanup "$backupDir" $maxDirSize
                 mv $compressedFile "$backupDir"
                 error_catch "Unable to move the compressed file to '$backupDir'." "The compressed file was moved successfully to '$backupDir'."
         else
-                dir_cleanup
+                dir_cleanup "$backupDir" $maxDirSize
                 mv $dateStamp "$backupDir"
                 error_catch "Unable to move the backup folder to '$backupDir'." "The backup folder was moved successfully to '$backupDir'."
         fi
@@ -249,13 +249,12 @@ fi
 
 ### Extra backup copy
 if [[ -n $extraBackupDir ]]; then
-
 	# Change dir to the extra backup dir to get all the available space
 	cd "$extraBackupDir"
 	extraBackupDirSize=$(df . | tail -n 1 | awk '{print $2}')
 	# Change to the dir where the backup has been moved to
 	cd "$backupDir"
-        if [ "$tarBackup" -eq 1 ];
+        if [[ "$tarBackup" -eq 1 ]];
 		# Clean the destination dir before copying
 		dir_cleanup "$extraBackupDir" $extraBackupDirSize
                 then
