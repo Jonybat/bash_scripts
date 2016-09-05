@@ -11,8 +11,6 @@
 # - 7za (p7zip)		(to compress the backup file)
 ###
 
-# TODO
-# - pre commands to include on backup
 
 . /opt/scripts/shlog.sh
 
@@ -228,6 +226,11 @@ if [[ $backupMysql -eq 1 ]]; then
         mysqldump $mysqlArgs $mysqlDb > "$sqlPath"
         error_catch "The MySQL database backup failed. Check the settings." "$TMPVAR"
 fi
+
+cd $tmpPath || critical_exit "Unable to change to the temporary directory!"
+
+# Execute the extra commands
+extra_commands
 
 cd $tmpDir || critical_exit "Unable to change to the temporary directory!"
 

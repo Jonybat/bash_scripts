@@ -116,6 +116,15 @@ cloneDirScript="/opt/scripts/clonedir_installer.sh"
 plainLog="1"
 
 
+##### EXTRA COMMANDS #####
+# - Output files will be stored in the root dir of the backup. Do not remove the last echo.
+#
+extra_commands ()
+{
+uname -r >example.txt
+echo ""	>/dev/null
+}
+#
 ### EXTRA INFO ###
 # - Extra information to include in the header on backup start.	Do not remove the last echo.
 #
