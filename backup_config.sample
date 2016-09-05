@@ -114,3 +114,14 @@ cloneDirScript="/opt/scripts/clonedir_installer.sh"
 # - Set to "1" to create a log file without colors, otherwise set to "0" or leave unset.
 #
 plainLog="1"
+
+
+### EXTRA INFO ###
+# - Extra information to include in the header on backup start.	Do not remove the last echo.
+#
+extra_info ()
+{
+echo "Example: $(uname -r)"
+echo ""
+}  
+

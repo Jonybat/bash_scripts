@@ -12,7 +12,6 @@
 ###
 
 # TODO
-# - extra info on header
 # - pre commands to include on backup
 
 . /opt/scripts/shlog.sh
@@ -109,10 +108,34 @@ else
 fi
 }
 
+backup_source_config ()
+{
+# Check if config file argument was specified and if it is readable, then source it
+if [[ -n "$1" ]]; then
+	if [[ -r "$1" ]]; then
+		source "$1"
+	else
+		shlog -s datestamp "Config file is not valid or not readable! Exiting..."
+		exit 1
+	fi
+else
+	shlog -s datestamp "No config file specified! Exiting..."
+	echo ""
+	backup_help
+fi
+}
+
 backup_settings ()
 {
+# Check if config file was specified and source it
+backup_source_config "$1"
+
 # Populate the vars
 backup_vars
+
+shlog " "
+shlog " "
+shlog -s weekstamp "Using config file: $1"
 
 shlog " "
 if [[ ${#sourceDir[*]} -ne 0 ]]; then
@@ -149,23 +172,11 @@ else
         shlog "Root filesystem cloning: \e[0;31mNO\e[0m"
 fi
 shlog " "
-}
 
-backup_source_config ()
-{
-# Check if config file argument was specified and if it is readable, then source it
-if [[ -n "$1" ]]; then
-	if [[ -r "$1" ]]; then
-		source "$1"
-	else
-		shlog -s datestamp "Config file is not valid or not readable! Exiting..."
-		exit 1
-	fi
-else
-	shlog -s datestamp "No config file specified! Exiting..."
-	echo ""
-	backup_help
-fi
+# Output extra info from commands set in config
+shlog "$(extra_info)"
+shlog " "
+
 }
 
 backup_help ()
@@ -177,16 +188,8 @@ exit 1
 
 case "$1" in
 'start')
-
-# Check if config file was specified and source it
-backup_source_config "$2"
-
-shlog " "
-shlog " "
-shlog -s weekstamp "Using config file: $2"
-
-# Print the current backup settings
-backup_settings
+# Pass the second argument to the child function and print the current settings
+backup_settings "$2"
 
 mkdir -p "$tmpPath" || critical_exit "Unable to create the temporary directory!"
 
@@ -313,11 +316,8 @@ fi
 # Change LOGPATH so we dont write anything to the log file
 LOGPATH="/dev/null"
 
-# Check if config file was specified and source it
-backup_source_config "$2"
-
-# Print the current backup settings
-backup_settings
+# Pass the second argument to the child function and print the current settings
+backup_settings "$2"
 ;;
 
 
