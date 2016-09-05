@@ -169,6 +169,7 @@ else
 fi
 if [[ -n $cloneDir ]]; then
 	shlog "Root filesystem cloning: \e[0;32mYES\e[0m"
+	settings=$(( $settings + 1 ))
 else
 	shlog "Root filesystem cloning: \e[0;31mNO\e[0m"
 fi
@@ -201,11 +202,11 @@ for dir in ${!sourceDir[*]}
 		rsync $rsyncArgs "${sourceDir[$dir]}" "$tmpPath"
 		warning_catch "The files backup process failed in '${sourceDir[$dir]}'. Check the file permissions." "'${sourceDir[$dir]}' copied successfully."
 	else
-		warning=$(($warning+1))
+		warning=$(( $warning + 1 ))
 		shlog -s timestamp "\e[0;31mERROR!\e[0m - The files backup process failed in '${sourceDir[$dir]}'. Check if the file exists."
 	fi
 	if [[ $warning -ge ${#sourceDir[*]} ]]; then
-		error=$(($error+1))
+		error=$(( $error + 1 ))
 	fi
 done
 
@@ -237,23 +238,30 @@ extra_commands
 
 cd $tmpDir || critical_exit "Unable to change to the temporary directory!"
 
-# Check if files were set to backup to decide if we should archive, move or delete the backup folder
+# Check if any settings are defined, cleanup and exit if not
 if [[ $settings -ne 0 ]]; then
-	# Compress the backup files and move to the destination or just move the folder
-	if [[ $tarBackup -eq 1 ]]; then
-		tar $tarArgs $dateStamp | 7za $compressorArgs $compressedFile 2>1 >/dev/null
-		error_catch "Unable to create the 7z file in '$compressedPath'." "The 7z file was created successfully in '$compressedPath'."
-		backup_dir_cleanup "$backupDir" $maxDirSize
-		mv $compressedFile "$backupDir"
-		error_catch "Unable to move the compressed file to '$backupDir'." "The compressed file was moved successfully to '$backupDir'."
+	# Check if files were backed up to decide if we should archive, move or delete the backup folder
+	if [[ -n $(ls $dateStamp) ]]; then
+		# Compress the backup files and move to the destination or just move the folder
+		if [[ $tarBackup -eq 1 ]]; then
+			tar $tarArgs $dateStamp | 7za $compressorArgs $compressedFile 2>1 >/dev/null
+			error_catch "Unable to create the 7z file in '$compressedPath'." "The 7z file was created successfully in '$compressedPath'."
+			backup_dir_cleanup "$backupDir" $maxDirSize
+			mv $compressedFile "$backupDir"
+			error_catch "Unable to move the compressed file to '$backupDir'." "The compressed file was moved successfully to '$backupDir'."
+		else
+			backup_dir_cleanup "$backupDir" $maxDirSize
+			mv $dateStamp "$backupDir"
+			error_catch "Unable to move the backup folder to '$backupDir'." "The backup folder was moved successfully to '$backupDir'."
+		fi
 	else
-		backup_dir_cleanup "$backupDir" $maxDirSize
-		mv $dateStamp "$backupDir"
-		error_catch "Unable to move the backup folder to '$backupDir'." "The backup folder was moved successfully to '$backupDir'."
+		error=$(( $error + 1 ))
+		shlog -s timestamp "\e[0;31mERROR!\e[0m - No files were backed up. Removing '$dateStamp'"
+		rm -rf $dateStamp*
 	fi
 else
 	rm -rf $dateStamp*
-	critical_exit "There are no files to backup!"
+	critical_exit "Nothing was set to backup!"
 fi
 
 ### Extra backup copy
@@ -286,9 +294,9 @@ fi
 ### Output final script report
 shlog " "
 if [[ $error -ne 0 ]]; then
-	shlog -s datestamp "\e[0;31m$error error(S)\e[0m!  - The process finished with $error error(s)."
+	shlog -s datestamp "\e[0;31m$error error(s)\e[0m!  - The process finished with $error error(s)."
 elif [[ $warning -ne 0 ]]; then
-	shlog -s datestamp "\e[0;33m$warning warning(S)!\e[0m - The process finished with $warning warning(s)."
+	shlog -s datestamp "\e[0;33m$warning warning(s)!\e[0m - The process finished with $warning warning(s)."
 else
 	shlog -s datestamp "\e[0;32mALL GOOD!\e[0m     - The process finished successfully."
 fi
