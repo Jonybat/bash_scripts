@@ -54,6 +54,8 @@ selectionsPath="$tmpDir/$selectionsFile"
 warning="0"
 error="0"
 settings="0"
+totalDirs="0"
+totalFiles="0"
 }
 
 warning_catch ()
@@ -134,16 +136,24 @@ backup_source_config "$1"
 # Populate the vars
 backup_vars
 
+# Count the real number of dirs and files
+for line in ${!sourceDir[*]}; do
+	realFiles=$(find "${sourceDir[$line]}" -type f | wc -l)
+	totalFiles=$(($totalFiles+$realFiles))
+	realDirs=$(find "${sourceDir[$line]}" -type d | wc -l)
+	totalDirs=$(($totalDirs+$realDirs))
+done
+
 shlog " "
 shlog " "
 shlog -s weekstamp "Using config file: $1"
 
 shlog " "
 if [[ ${#sourceDir[*]} -ne 0 ]]; then
-	shlog "Folders and files to copy: \e[0;32m${#sourceDir[*]}\e[0m"
+	shlog "Items set to backup: \e[0;32m${#sourceDir[*]}\e[0m - Folders:$totalDirs, Files:$totalFiles"
 	settings=$(( $settings + 1 ))
 else
-	shlog "Folders and files to copy: \e[0;31m${#sourceDir[*]}\e[0m"
+	shlog "Items set to backup: \e[0;31m0\e[0m"
 fi
 if [[ $backupFtp -eq 1 ]]; then
 	shlog "FTP files backup: \e[0;32mYES\e[0m"
@@ -196,8 +206,7 @@ backup_settings "$2"
 mkdir -p "$tmpPath" || critical_exit "Unable to create the temporary directory!"
 
 ### Folders and files backup
-for dir in ${!sourceDir[*]}
-	do
+for dir in ${!sourceDir[*]}; do
 	if [[ -e ${sourceDir[$dir]} ]]; then
 		rsync $rsyncArgs "${sourceDir[$dir]}" "$tmpPath"
 		warning_catch "The files backup process failed in '${sourceDir[$dir]}'. Check the file permissions." "'${sourceDir[$dir]}' copied successfully."
