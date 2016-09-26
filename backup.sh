@@ -150,7 +150,7 @@ shlog -s weekstamp "Using config file: $1"
 
 shlog " "
 if [[ ${#sourceDir[*]} -ne 0 ]]; then
-	shlog "Items set to backup: \e[0;32m${#sourceDir[*]}\e[0m - Folders:$totalDirs, Files:$totalFiles"
+	shlog "Items set to backup: \e[0;32m${#sourceDir[*]}\e[0m - Folders: $totalDirs, Files: $totalFiles"
 	settings=$(( $settings + 1 ))
 else
 	shlog "Items set to backup: \e[0;31m0\e[0m"
@@ -303,11 +303,11 @@ fi
 ### Output final script report
 shlog " "
 if [[ $error -ne 0 ]]; then
-	shlog -s datestamp "\e[0;31m$error error(s)\e[0m!  - The process finished with $error error(s)."
+	shlog -s datestamp "\e[0;31m$error ERROR(S)\e[0m    - Backup finished with $error error(s)."
 elif [[ $warning -ne 0 ]]; then
-	shlog -s datestamp "\e[0;33m$warning warning(s)!\e[0m - The process finished with $warning warning(s)."
+	shlog -s datestamp "\e[0;33m$warning WARNINGS(S)\e[0m - Backup finished with $warning warning(s)."
 else
-	shlog -s datestamp "\e[0;32mALL GOOD!\e[0m     - The process finished successfully."
+	shlog -s datestamp "\e[0;32mALL GOOD\e[0m      - Backup finished successfully."
 fi
 echo ""
 
