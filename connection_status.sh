@@ -10,16 +10,16 @@
 . /opt/scripts/pushbullet.sh
 
 dyndnsScript="/opt/scripts/dynamic_dns_updater.sh"
-ts3Script="/opt/scripts/ts3_availability_balancer.sh"
+postScript="/opt/scripts/post_check_scripts.sh"
 
 run_scripts (){
 shlog -s timestamp "Running dynamic DNS updater" -p nolog
 bash "$dyndnsScript"
 if [ $? -eq 0 ]; then
-	shlog -s timestamp "Running TeamSpeak 3 availability balancer" -p nolog
-	bash "$ts3Script"
+	shlog -s timestamp "Running post check scripts" -p nolog
+	bash "$postScript"
 else
-	shlog -s datestamp "The DNS updater script exited with code $?. Not running the TS3 availability balancer"
+	shlog -s datestamp "The DNS updater script exited with code $?. Not running post check scripts"
 fi
 }
 
@@ -65,7 +65,7 @@ else
 	internetStatus="1"
 fi
 }
- 
+
 ### Main code
 # Check Gateway IP
 ping -c 1 $gatewayIP 2>&1 >/dev/null
@@ -79,17 +79,17 @@ else
 	check_internet
 	# Compare both checks and act accordingly
 	if [ $dnsStatus -eq 0 ] && [ $internetStatus -eq 0 ]; then
-		shlog -s timestamp "Both DNS resolution and Internet IP are down in the main gateway...Exiting"
+		shlog -s timestamp "Both DNS resolution and Internet IP are down in the main gateway, exiting..."
 		# Very unlikely that this will go through but try it anyway
 		pushb "Both DNS resolution and Internet IP are down in the main gateway. Not doing anything!"
 		remove_lock
 		exit 2
 	elif [ $dnsStatus -eq 0 ] && [ $internetStatus -eq 1 ]; then
-		shlog -s timestamp "DNS resolution is down but Internet IP is up. DNS resolution might fail...Trying anyway"
-	#	run_scripts
+		shlog -s timestamp "DNS resolution is down but Internet IP is up. DNS resolution might fail, trying anyway..."
+		run_scripts
 	else
 		shlog -s timestamp "Both DNS and Internet IPs are up in the main gateway" -p nolog
-	#	run_scripts
+		run_scripts
 	fi
 fi
 
