@@ -1,0 +1,3 @@
+Just some of my bash scripts
+
+If you are a programmer, just look away, or you shall cringe...
