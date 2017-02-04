@@ -9,7 +9,8 @@
 # - mysqldump		(to backup MySQL databases)
 # - tar			(to archive the backup folder)
 # - 7za (p7zip)		(to compress the backup file)
-###
+#
+### ./backup.sh --help for usage, see the provided backup_config.sample for settings
 
 . /opt/scripts/shlog.sh
 
@@ -194,7 +195,6 @@ shlog " "
 backup_help ()
 {
 echo "Usage: $0 [start|status|settings] [config_file]"
-exit 1
 }
 
 ### Main
@@ -362,9 +362,16 @@ LOGPATH="/dev/null"
 backup_settings "$2"
 ;;
 
+-h|--help)
+backup_help
+;;
 
 *)
+echo -n "Invalid option!
+
+"
 backup_help
+exit 1
 ;;
 esac
 exit 0
