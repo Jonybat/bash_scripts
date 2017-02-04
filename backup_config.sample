@@ -94,9 +94,9 @@ mysqlPass="pass"
 #
 mysqlDb="db_name"
 #
-### SQL FILE NAME ###
+### SQL DESTINATION FOLDER ###
 #
-sqlFile="backup.sql"
+sqlDir="databases"
 
 
 ##### ROOT DIR CLONING #####

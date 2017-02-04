@@ -44,9 +44,10 @@ cpArgs="--recursive --force"
 ### VARIABLE CONCATENATION
 tmpPath="$tmpDir/$dateStamp"
 ftpArgs="-R -T -v -u $ftpUser -p $ftpPass"
-mysqlArgs="-h $mysqlHost -u $mysqlUser -p$mysqlPass"
+mysqlArgs="-h $mysqlHost -u$mysqlUser -p$mysqlPass -N"
+mysqldumpArgs="-h $mysqlHost -u $mysqlUser -p$mysqlPass"
 ftpPath="$tmpPath/$ftpDir"
-sqlPath="$tmpPath/$sqlFile"
+sqlPath="$tmpPath/$sqlDir"
 compressedPath="$tmpDir/$compressedFile"
 versionsPath="$tmpDir/$versionsFile"
 selectionsPath="$tmpDir/$selectionsFile"
@@ -230,13 +231,21 @@ fi
 
 ### MySQL backup
 if [[ $backupMysql -eq 1 ]]; then
-	if [[ $mysqlDb != "-A" ]]; then
-		tmpText="The database '$mysqlDb' was copied successfully to '$sqlPath'."
+	if mkdir -p "$sqlPath"; then
+		if [[ $mysqlDb != "-A" ]]; then
+			tmpText="The database '$mysqlDb' was copied successfully to '$sqlPath'."
+			mysqldump $mysqldumpArgs $mysqlDb > "$sqlPath"
+		else
+			tmpText="All the databases were copied successfully to '$sqlPath'."
+			mysql $mysqlArgs -e 'show databases' | while read dbName; do
+				mysqldump $mysqldumpArgs $dbName > "$sqlPath/$dbName.sql"
+				error_catch "The database backup failed on database '$dbName'. Check the database permissions." "The database '$dbName' was copied successfully to '$sqlPath'."
+			done
+		fi
+		error_catch "The MySQL database backup failed. Check the settings." "$tmpText"
 	else
-		tmpText="All the databases were copied successfully to '$sqlPath'."
+		shlog -s timestamp "\e[0;31mERROR!\e[0m - Unable to create the SQL directory"
 	fi
-	mysqldump $mysqlArgs $mysqlDb > "$sqlPath"
-	error_catch "The MySQL database backup failed. Check the settings." "$tmpText"
 fi
 
 cd $tmpPath || critical_exit "Unable to change to the temporary directory!"
