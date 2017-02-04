@@ -1,17 +1,16 @@
 #!/bin/bash
 #
-# Uses kiara to rename anime files according to anidb.net:
+### Uses kiara to rename anime files according to anidb.net
 # https://github.com/hartfelt/kiara/
-#
-### Settings
+
 . /opt/scripts/shlog.sh
 
+### Settings
 bin="/usr/local/bin/kiara"
 args="--organize --overwrite --brief"
 animeListFile="/var/tmp/anime_rename.txt"
 
 ### Main
-
 # Define the internal field separator to CR and LF so that the animeList elements are full lines
 IFS=$'\r\n'
 animeList=( $(cat $animeListFile) )
