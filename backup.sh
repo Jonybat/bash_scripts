@@ -234,7 +234,7 @@ if [[ $backupMysql -eq 1 ]]; then
   if mkdir -p "$sqlPath"; then
     if [[ $mysqlDb != "-A" ]]; then
       tmpText="The database '$mysqlDb' was copied successfully to '$sqlPath'."
-      mysqldump $mysqldumpArgs $mysqlDb > "$sqlPath"
+      mysqldump $mysqldumpArgs $mysqlDb > "$sqlPath/$mysqlDb.sql"
     else
       tmpText="All the databases were copied successfully to '$sqlPath'."
       mysql $mysqlArgs -e 'show databases' | while read dbName; do
