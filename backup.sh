@@ -30,8 +30,11 @@ done
 ### RSYNC OPTIONS
 rsyncArgs="--quiet --archive --acls --xattrs --force --delete --backup --relative $excludes"
 
-### ALT RSYNC FLAGS
-rsyncArgsRootfs="--archive --acls --xattrs --update --force --delete --one-file-system --exclude=/proc/* --exclude=/sys/* --exclude=/tmp/* --exclude=/media/* --exclude=/run/* --exclude=/dev/* --exclude=/lost+found"
+### RSYNC OPTIONS FOR ROOT FS
+rsyncArgsRoot="--archive --acls --xattrs --update --force --delete --one-file-system --exclude=/dev/* --exclude=/proc/* --exclude=/sys/* --exclude=/tmp/* --exclude=/run/* --exclude=/lost+found"
+
+### RSYNC OPTIONS FOR FULL CLONE
+rsyncArgsAll="--archive --acls --xattrs --update --force --delete --exclude=/dev/* --exclude=/proc/* --exclude=/sys/* --exclude=/tmp/* --exclude=/run/* --exclude=/lost+found --exclude=/media/* --exclude=/mnt/*"
 
 ### TAR OPTIONS
 tarArgs="--create --preserve-permissions --recursion --remove-files --to-stdout"
@@ -233,13 +236,13 @@ fi
 if [[ $backupMysql -eq 1 ]]; then
   if mkdir -p "$sqlPath"; then
     if [[ $mysqlDb != "-A" ]]; then
-      tmpText="The database '$mysqlDb' was copied successfully to '$sqlPath'."
+      tmpText="The database '$mysqlDb' was copied successfully'."
       mysqldump $mysqldumpArgs $mysqlDb > "$sqlPath/$mysqlDb.sql"
     else
       tmpText="All the databases were copied successfully to '$sqlPath'."
       mysql $mysqlArgs -e 'show databases' | while read dbName; do
         mysqldump $mysqldumpArgs $dbName > "$sqlPath/$dbName.sql"
-        error_catch "The database backup failed on database '$dbName'. Check the database permissions." "The database '$dbName' was copied successfully to '$sqlPath'."
+        error_catch "The database backup failed on database '$dbName'. Check the database permissions." "The database '$dbName' was copied successfully."
       done
     fi
     error_catch "The MySQL database backup failed. Check the settings." "$tmpText"
@@ -302,10 +305,15 @@ fi
 
 ### Root FS clone
 if [[ -n $cloneDir ]]; then
-  rsync $rsyncArgsRootfs / "$cloneDir"
+  rsync $rsyncArgsRoot / "$cloneDir"
   warning_catch "The root filesystem cloning to '$cloneDir' ended with errors." "The root filesystem cloning to '$cloneDir' ended successfully."
-  echo "Running "
-  "$cloneDirScript"
+  rsync $rsyncArgsAll / "$cloneDir"
+  warning_catch "The full filesystem cloning to '$cloneDir' ended with errors." "The full filesystem cloning to '$cloneDir' ended successfully."
+  # Run clone dir installer script if set
+  if [[ -n $cloneDirScript ]]; then
+    $cloneDirScript $cloneDir
+    warning_catch "The backup filesystem installation script terminated with errors." "The backup filesystem installation script terminated successfully."
+  fi
 fi
 
 ### Output final script report
