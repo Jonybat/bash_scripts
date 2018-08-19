@@ -7,7 +7,7 @@
 
 ### Settings
 bin="/usr/local/bin/kiara"
-args="--organize --overwrite --brief"
+args="--config /etc/kiara/kiararc --organize --overwrite --brief"
 animeListFile="/var/tmp/anime_rename.txt"
 
 ### Main
@@ -56,7 +56,7 @@ for line in ${!animeList[*]}; do
       shlog -s timestamp "File still exists with the same name. File probably does not exist in aniDB yet."
     else
       # File does not exist anymore, and does not match the first case, so it must have been renamed
-      shlog -s timestamp "File renamed successfully to: $newName"
+      shlog -s timestamp "File renamed successfully." # to: $newName"
       #Remove the file that was renamed from the anime list file
       sed -i "/$animePath_safe/d" "$animeListFile"
     fi
