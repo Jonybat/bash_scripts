@@ -34,16 +34,24 @@ fi
 backupDisk=$(df $1/boot | grep -Eo '/dev/sd.') || critical_exit "Disk '$(df $1/boot | awk '/^\/dev/ {print $1}')' is not valid for grub installation"
 
 # Mount dev, proc and sys if not mounted already
-mount | grep -o "/dev on $backupPath/dev type none (rw,bind)" || mount --bind /dev/ $backupPath/dev/
-mount | grep -o "/proc on $backupPath/proc type none (rw,bind)" || mount --bind /proc/ $backupPath/proc/
-mount | grep -o "/sys on $backupPath/sys type none (rw,bind)" || mount --bind /sys/ $backupPath/sys/
+mount | grep -o "on $backupPath/dev type" || mount --bind /dev "$backupPath/dev"
+mount | grep -o "on $backupPath/dev/pts type" || mount --bind /dev/pts "$backupPath/dev/pts"
+mount | grep -o "on $backupPath/proc type" || mount --bind /proc "$backupPath/proc"
+mount | grep -o "on $backupPath/sys type" || mount --bind /sys "$backupPath/sys"
+mount | grep -o "on $backupPath/run type" || mount --bind /run "$backupPath/run"
 
 # Chroot to the backup dir and install grub
-chroot $backupPath grub-install $backupDisk || error_incr "Failed to install grub to $backupDisk"
-chroot $backupPath update-grub2 || error_incr "Failed to update grub settings"
+chroot $backupPath grub-install $backupDisk # || error_incr "Failed to install grub to $backupDisk" # need to find a way to capture chroot commands result
+chroot $backupPath update-grub2 # || error_incr "Failed to update grub settings"
 
-# Check if fstab files differ
-cmp --silent $backupPath$backupFstab $backupPath/etc/fstab && error_incr "Fstab files are equal, the backup fs will not boot"
+umount "$backupPath/dev/pts"
+umount "$backupPath/dev"
+umount "$backupPath/proc"
+umount "$backupPath/sys"
+umount "$backupPath/run"
+
+# Check if fstab files differ TODO: this only works the first time, because after the next copy, rsync wont overwrite
+#cmp --silent $backupPath$backupFstab $backupPath/etc/fstab && error_incr "Fstab files are equal, the backup fs will not boot"
 # Activate backupfs fstab
 cp -f $backupPath$backupFstab $backupPath/etc/fstab || error_incr "Unable to activate fstab, the backup fs will not boot"
 
