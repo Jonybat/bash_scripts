@@ -129,6 +129,7 @@ else
   shlog -s datestamp "No config file specified! Exiting..."
   echo ""
   backup_help
+  exit 1
 fi
 }
 
