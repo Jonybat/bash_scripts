@@ -1,13 +1,15 @@
 #!/bin/bash
 #
-### Uses kiara to rename anime files according to anidb.net
-# https://github.com/hartfelt/kiara/
+### Uses anidbcli to rename anime files according to anidb.net
+# https://github.com/adameste/anidbcli
 
 . /opt/scripts/shlog.sh
+. /opt/scripts/.secrets
 
 ### Settings
-bin="/usr/local/bin/kiara"
-args="--config /etc/kiara/kiararc --organize --overwrite --brief"
+bin="/opt/anidbcli/bin/anidbcli"
+format="%a_romaji% - ep%ep_no% - %ep_english% - [%g_name%]"
+args=(api -u "$ANIDB_USER" -p "$ANIDB_PASS" -k "$ANIDB_APIKEY" -sr "$format")
 animeListFile="/var/tmp/anime_rename.txt"
 
 ### Main
@@ -26,50 +28,67 @@ fi
 # Since it does, do what must be done
 for line in ${!animeList[*]}; do
   # Move animeList line to tmp var to make code easier to read
-  animePath="${animeList[$line]}"
+  animeFullPath="${animeList[$line]}"
   # Escape \, /, & and [] because of sed
-  animePath_safe=$(echo $animePath | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
+  animeFullPath_safe=$(echo $animeFullPath | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
   # Split the path in multiple vars for later use
-  animeDir=$(echo $animePath | grep -Eo '/.*/')
-  animeName=$(echo $animePath | grep -Po '[^/]*(?=- ep.*)')
-  animeId=$(echo $animePath | grep -Po '[_\-\s](ep)?[0-9]{1,3}' | grep -Eo '[0-9]{1,3}')
+  animePath=$(echo $animeFullPath | grep -Eo '/.*/')
+  animeDir=$(echo $animePath | rev | cut -d\/ -f 2 | rev)
+  animeName=$(echo $animeFullPath | grep -Po '[^/]*(?= - ep.*)')
 
   # Check if file exists or not, to avoid errors from the program and get more accurate condition checks later on
-  if [[ -e "$animePath" ]]; then
-    shlog -s datestamp "Renaming: $animePath"
-    # Call the program to rename the file
-    $bin $args "$animePath"
+  if [[ -e "$animeFullPath" ]]; then
+    shlog -s datestamp "Renaming: $animeFullPath"
+    # Call the program to rename the file, args have to be expanded like this otherwise bash shell expansion will break program input
+    result=$($bin "${args[@]}" "$animeFullPath" 2>&1)
+    # Save last line from program output
+    result=$(echo "$result" | tail -n 1)
 
-    # Get the name and path after renaming
-    newName=$(ls "$animeDir" | grep $animeId)
-    newPath=$animeDir$newName
-    newPath_safe=$(echo $newPath | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
-
-    # Do things if it was renamed and if not
-    if [[ $(echo $newName | grep -E "[e,E]pisode|[u,U]nknown") ]]; then
-      # Episode name contains the word episode or unknown, so it was not renamed properly
-      shlog -s timestamp "File was not renamed properly! Episode probably does not have a name yet on aniDB."
-      # Replace the old path with the new
-      sed -i "s/$animePath_safe/$newPath_safe/g" "$animeListFile"
-    elif [[ -e "$animePath" ]]; then
-      # Original file still exists, so it was not renamed
-      shlog -s timestamp "File still exists with the same name. File probably does not exist in aniDB yet."
-    else
-      # File does not exist anymore, and does not match the first case, so it must have been renamed
-      shlog -s timestamp "File renamed successfully." # to: $newName"
-      #Remove the file that was renamed from the anime list file
-      sed -i "/$animePath_safe/d" "$animeListFile"
+    if [[ $(echo $result | grep -i "file renamed") ]]; then
+      # Get the name and path after renaming
+      newFullPath=$(echo $result | cut -d\" -f 2)
+      newFullPath_safe=$(echo $newFullPath | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
+      if [[ $(echo $newFullPath | grep -E "[e,E]pisode|[u,U]nknown") ]]; then
+	# Episode name contains the word episode or unknown, so it was (probably) not renamed properly
+	shlog -s timestamp "File was not renamed properly! Episode probably does not have a name yet on aniDB."
+	# Replace the old path with the new so it will go back in the list to be renamed
+	sed -i "s/$animeFullPath_safe/$newFullPath_safe/g" "$animeListFile"
+      else
+        # File renamed successfully
+	shlog -s timestamp "File renamed successfully to $newFullPath."
+	sed -i "/$animeFullPath_safe/d" "$animeListFile"
+        newName=$(echo $newFullPath | grep -Po '[^/]*(?= - ep.*)')
+        # Check if anime name has changed and if so move to the new directory
+        if [[ "$newName" != "$animeDir" ]]; then
+          newPath=$(echo $animePath | sed "s/$animeDir/$newName/g")
+	  shlog -s timestamp "Anime name does not match directory. Moving to $newPath"
+          mkdir -p "$newPath"
+          mv "$newFullPath" "$newPath"
+          # Try removing the old directory, will fail if not empty
+          rmdir "$animePath"
+        fi
+      fi
+    elif [[ $(echo $result | grep -i "failed to get file") ]]; then
+      # File does not exist in aniDB
+      shlog -s timestamp "File does not exist in aniDB (yet?)." # to: $newName"
+    elif [[ $(echo $result | grep -i "failed to rename") ]]; then
+      # Failed to rename file
+      shlog -s timestamp "Failed to rename file. Check file permissions."
+    elif [[ $(echo $result | grep -i "does not exist") ]]; then
+      # File does not exist in fs, remove it from the list file, just in case something went wrong with the first check
+      shlog -s timestamp "File does not exist, removing entry: $animeFullPath"
+      sed -i "/$animeFullPath_safe/d" "$animeListFile"
+    elif [[ $(echo $result | grep -Ei "connect|timeout") ]]; then
+      # API timeout
+      shlog -s timestamp "API timeout, cannot continue"
+    elif [[ $(echo $result | grep -i "banned") ]]; then
+      # API ban
+      shlog -s timestamp "API ban, cannot continue"
     fi
-
   else
-    # File does not exist, remove it from the list file
-    shlog -s datestamp "File does not exist, removing entry: $animePath"
-    # Remove the file that was renamed from the anime list file
-    sed -i "/$animePath_safe/d" "$animeListFile"
+    # File does not exist in fs, remove it from the list file
+    shlog -s datestamp "File does not exist, removing entry: $animeFullPath"
+    sed -i "/$animeFullPath_safe/d" "$animeListFile"
   fi
 done
-
-# Kill kiara backend, since it does nothing after renaming
-$bin --kill
-
 exit 0
