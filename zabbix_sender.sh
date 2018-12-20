@@ -2,7 +2,7 @@
 #
 ### Zabbix sender implementation in bourne shell
 #
-# Requires: nc
+# Requires: nc, cut
 
 usage() {
 echo -n "Usage:
@@ -70,19 +70,38 @@ fi
 
 # Check if input file or key/value pair was specified
 if [ -n "$inputFile" ]; then
-  # Begin JSON
-  query='{"request":"sender data","data":['
-  # Iterate over all lines in $inputFile and add the items to the JSON object
+  # Begin JSON data
+  data='{"request":"sender data","data":['
+  # Iterate over all lines in $inputFile and add the items to the JSON data
   while read line; do
-    query=$query'{"host":'\"$(echo $line | cut -d' ' -f1)\"',"key":'\"$(echo $line | cut -d' ' -f2)\"',"value":'\"$(echo $line | cut -d' ' -f3-)\"'},'
+    data=$data'{"host":'\"$(echo $line | cut -d' ' -f1)\"',"key":'\"$(echo $line | cut -d' ' -f2)\"',"value":'\"$(echo $line | cut -d' ' -f3-)\"'},'
   done < $inputFile
   # Remove last , and end JSON
-  query=${query%?}']}'
+  data=${data%?}']}'
+  # Build header - https://www.zabbix.com/documentation/4.0/manual/appendix/protocols/header_datalen
+  length=$(printf '%016x' "${#data}")
+  pack=""
+  for i in 15 13 11 9 7 5 3 1; do
+    tmp=$(echo $length | cut -b $i-$(($i+1)))
+    pack="$pack\\x$tmp"
+  done
+  echo "Server query: $(printf "ZBXD\\1$pack%s" "$data")"
   # Send it to the server
-  response=$(echo $query | nc $serverHost $serverPort)
+  response=$(printf "ZBXD\\1$pack%s" "$data" | nc $serverHost $serverPort)
   echo "Server response: $response"
 elif [ -n "$itemKey" ] && [ -n "$itemValue" ]; then
-  response=$(echo '{"request":"sender data","data":[{"host":'\"$clientHost\"',"key":'\"$itemKey\"',"value":'\"$itemValue\"'}]}' | nc $serverHost $serverPort)
+  # Build JSON data
+  data='{"request":"sender data","data":[{"host":'\"$clientHost\"',"key":'\"$itemKey\"',"value":'\"$itemValue\"'}]}'
+  # Build header - https://www.zabbix.com/documentation/4.0/manual/appendix/protocols/header_datalen
+  length=$(printf '%016x' "${#data}")
+  pack=""
+  for i in 15 13 11 9 7 5 3 1; do
+    tmp=$(echo $length | cut -b $i-$(($i+1)))
+    pack="$pack\\x$tmp"
+  done
+  echo "Server query: $(printf "ZBXD\\1$pack%s" "$data")"
+  # Send it to the server
+  response=$(printf "ZBXD\\1$pack%s" "$data" | nc $serverHost $serverPort)
   echo "Server response: $response"
 else
   echo "Either input file or key/value pair must be specified"
