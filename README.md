@@ -139,7 +139,7 @@ SNORT_OINKCODE="oinkcode"
 
 ### `zabbix_sender.sh`
 
-[Zabbix sender](https://www.zabbix.com/documentation/4.0/manual/concepts/sender) implementation in bash. Provides extra arguments:
+[Zabbix sender](https://www.zabbix.com/documentation/4.0/manual/concepts/sender) implementation in b(a)sh. It was built to be as portable as possbile, mainly to be able to run it on limited shells, like BusyBox. Provides extra arguments:
 
 * `-p "port"` instead of `-z server:port`
 * `-i "input-file"` for batch sending of multiple values
