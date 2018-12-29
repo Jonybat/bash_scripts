@@ -149,3 +149,36 @@ SNORT_OINKCODE="oinkcode"
   zabbix_sender.sh -z "server" [-p "port"] -s "host" -k "key" -o "value"
   zabbix_sender.sh -z "server" [-p "port"] -i "input-file""
 ```
+
+---
+
+### `ups_msg.sh`
+
+Simple script to act as a NOTIFYCMD script for NUT's upsmon.
+
+#### Suggested config options for `/etc/nut/upsmon.conf`:
+```
+NOTIFYCMD "/path/to/ups_msg.sh"
+
+NOTIFYMSG ONLINE        "UPS %s - on line power"
+NOTIFYMSG ONBATT        "UPS %s - on battery"
+NOTIFYMSG LOWBATT       "UPS %s - battery is low"
+NOTIFYMSG FSD           "UPS %s - forced shutdown"
+NOTIFYMSG COMMOK        "UPS %s - communications established"
+NOTIFYMSG COMMBAD       "UPS %s - communications lost"
+NOTIFYMSG SHUTDOWN      "UPS %s - automatic system shutdown"
+NOTIFYMSG REPLBATT      "UPS %s - battery needs to be replaced"
+NOTIFYMSG NOCOMM        "UPS %s - unavailable"
+NOTIFYMSG NOPARENT      "upsmon parent process died - shutdown impossible"
+
+NOTIFYFLAG ONLINE       SYSLOG+EXEC+WALL
+NOTIFYFLAG ONBATT       SYSLOG+EXEC+WALL
+NOTIFYFLAG LOWBATT      SYSLOG+EXEC+WALL
+NOTIFYFLAG FSD          SYSLOG+EXEC+WALL
+NOTIFYFLAG COMMOK       SYSLOG+EXEC
+NOTIFYFLAG COMMBAD      SYSLOG+EXEC
+NOTIFYFLAG SHUTDOWN     SYSLOG+EXEC+WALL
+NOTIFYFLAG REPLBATT     SYSLOG+EXEC
+NOTIFYFLAG NOCOMM       SYSLOG+EXEC
+NOTIFYFLAG NOPARENT     SYSLOG+EXEC
+```
