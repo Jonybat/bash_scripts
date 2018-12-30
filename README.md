@@ -182,3 +182,16 @@ NOTIFYFLAG REPLBATT     SYSLOG+EXEC
 NOTIFYFLAG NOCOMM       SYSLOG+EXEC
 NOTIFYFLAG NOPARENT     SYSLOG+EXEC
 ```
+
+---
+
+### `scan_watchdog.sh`
+
+Daemon script to add network scan funcionality to a usb flatbed scanner, over samba shares. It looks for a trigger file, located in a samba shared ramdisk (to avoid constant disk reads), and triggers the scan according to the text inside the trigger file. Currently the options are: `color`, `color-hq`, `grayscale`, `grayscale-hq` and `lineart`. Requires ramdisk directory, scan destination directory and scanner USB ID to be set as global variables:
+
+#### `.secrets` example:
+```
+SCAN_DEVID="1234:5678"
+SCAN_DESTINATION="/mnt/scans/"
+SCAN_RAMDISK="/mnt/ramdisk" # No trailing slash
+```
