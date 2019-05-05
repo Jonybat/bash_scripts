@@ -9,9 +9,8 @@
 ### Settings
 bin="/opt/anidbcli/bin/anidbcli"
 format="%a_romaji% - ep%ep_no% - %ep_english% - [%g_name%]"
-args=(api -u "$ANIDB_USER" -p "$ANIDB_PASS" -k "$ANIDB_APIKEY" -sr "$format")
+args=(api -u "$ANIDB_USER" -p "$ANIDB_PASS" -k "$ANIDB_APIKEY" -t -sr "$format")
 animeListFile="/var/tmp/anime_rename.txt"
-sleep=30
 
 ### Main
 # Define the internal field separator to CR and LF so that the animeList elements are full lines
@@ -93,7 +92,5 @@ for line in ${!animeList[*]}; do
     shlog -s datestamp "File does not exist, removing entry: $animeFullPath"
     sed -i "/$animeFullPath_safe/d" "$animeListFile"
   fi
-  echo "Sleeping $sleep seconds..."
-  sleep $sleep
 done
 exit 0
