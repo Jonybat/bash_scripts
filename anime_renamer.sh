@@ -88,6 +88,10 @@ for line in ${!animeList[*]}; do
       # API ban
       shlog -s timestamp "API ban, cannot continue"
       exit 2
+    elif [[ $(echo $result | grep -i "must be aligned to block boundary in ECB mode") ]]; then
+      # Unknown cause, retrying later seems to work
+      shlog -s timestamp "API/script error, data must be aligned to block boundary in ECB mode, exiting for now"
+      exit 2
     elif [[ $(echo $result | grep -i "failed to get file") ]]; then
       # File does not exist in aniDB
       shlog -s timestamp "File does not exist in aniDB (yet?)." # to: $newName"
