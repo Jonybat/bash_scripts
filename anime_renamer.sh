@@ -34,7 +34,7 @@ for line in ${!animeList[*]}; do
   # Split the path in multiple vars for later use
   animePath=$(echo $animeFullPath | grep -Eo '/.*/')
   animeFile=$(basename "`echo $animeFullPath`")
-  animeSub="$(echo $animeFile | cut -d. -f -1).srt"
+  animeSub="$(echo $animeFile | rev | cut -d. -f 2- | rev).srt"
   animeDir=$(echo $animePath | rev | cut -d\/ -f 2 | rev)
   animeDir_safe=$(echo $animeDir | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
   animeName=$(echo $animeFullPath | grep -Po '[^/]*(?= - ep.*)')
@@ -54,7 +54,7 @@ for line in ${!animeList[*]}; do
       # Get the name and path after renaming
       newFullPath=$(echo $result | grep -Ei "file renamed.*\.(mkv|mp4|avi)" | cut -d\" -f 2)
       newFile=$(basename "`echo $newFullPath`")
-      newSub="$(echo $newFile | cut -d. -f -1).srt"
+      newSub="$(echo $newFile | rev | cut -d. -f 2- | rev).srt"
       newName=$(echo $newFullPath | grep -Po '[^/]*(?= - ep.*)')
       finalFullPath=$(echo $newFullPath | sed "s/$animeDir/$newName/g")
       finalFullPath_safe=$(echo $finalFullPath | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
