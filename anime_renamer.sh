@@ -36,6 +36,7 @@ for line in ${!animeList[*]}; do
   animeFile=$(basename "`echo $animeFullPath`")
   animeSub="$(echo $animeFile | cut -d. -f -1).srt"
   animeDir=$(echo $animePath | rev | cut -d\/ -f 2 | rev)
+  animeDir_safe=$(echo $animeDir | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
   animeName=$(echo $animeFullPath | grep -Po '[^/]*(?= - ep.*)')
 
   # Check if file exists or not, to avoid errors from the program and get more accurate condition checks later on
@@ -58,25 +59,18 @@ for line in ${!animeList[*]}; do
       finalFullPath=$(echo $newFullPath | sed "s/$animeDir/$newName/g")
       finalFullPath_safe=$(echo $finalFullPath | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g')
 
-      # Try to move sub file
-      shlog -s timestamp "DEBUG: Moving $animePath$animeSub to $animePath$newSub"
-      mv "$animePath$animeSub" "$animePath$newSub"
-      # Do some filename checks
-      if [[ $(echo $newFullPath | grep -E "[e,E]pisode|[u,U]nknown") ]]; then
-	# Episode name contains the word episode or unknown, so it was (probably) not renamed properly
-	shlog -s timestamp "File was not renamed properly! Episode probably does not have a name yet on aniDB."
-	# Replace the old path with the new so it will go back in the list to be renamed
-	shlog -s timestamp "DEBUG: Sed s/$animeFullPath_safe/$finalFullPath_safe/g from $animeListFile"
-	sed -i "s/$animeFullPath_safe/$finalFullPath_safe/g" "$animeListFile"
-      else
-        # File renamed successfully
-	shlog -s timestamp "File renamed successfully to $newFullPath."
-	shlog -s timestamp "DEBUG: Sed /$animeFullPath_safe/d from $animeListFile"
-	sed -i "/$animeFullPath_safe/d" "$animeListFile"
+      # Try to move sub file if exists
+      if [[ -f "$animePath$animeSub" ]]; then
+        shlog -s timestamp "DEBUG: Moving $animePath$animeSub to $animePath$newSub"
+        mv "$animePath$animeSub" "$animePath$newSub"
       fi
+      # File renamed successfully
+      shlog -s timestamp "File renamed successfully to $newFullPath."
+      shlog -s timestamp "DEBUG: Sed /$animeFullPath_safe/d from $animeListFile"
+      sed -i "/$animeFullPath_safe/d" "$animeListFile"
       # Check if anime name has changed and if so move to the new directory
       if [[ "$newName" != "$animeDir" ]]; then
-	newPath=$(echo $animePath | sed "s/$animeDir/$newName/g")
+	newPath=$(echo $animePath | sed "s/$animeDir_safe/$newName/g")
 	shlog -s timestamp "Anime name does not match directory. Moving to $newPath"
 	mkdir -p "$newPath"
 	shlog -s timestamp "DEBUG: Moving $newFullPath to $newPath"
