@@ -27,6 +27,14 @@ Script to be sourced from other scripts. Provides `shlog` function, for logging 
 
 ---
 
+### `shmount.sh`
+
+Script to be sourced from other scripts. Provides `mount_mounts` and `umount_mounts` functions. Expanded array should be provided as single argument, where each line is a CSV format as: `<UUID>,</mount/dir>,<fstype (defaults to auto)>,<mount opts (defaults to defaults)>`
+
+#### Usage: `mount_mounts "${mounts_array[@]}"`
+
+---
+
 ### `shuser.sh`
 
 Script to be sourced from other scripts. Simple script to make sure script runs as specified user.

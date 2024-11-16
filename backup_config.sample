@@ -25,22 +25,28 @@ extraBackupDir="/mnt/archive/"
 
 
 ##### DIRECTORIES AND FILES TO BACKUP #####
-# - To add a directory or file, just add a line like "sourceDir[x]=/path/to/folder/or/file.txt",
-#  where "x" is a number higher than the existing ones.
+# - To add a directory or file, just add a new line to the sourceDir array.
 # - Make sure that user running the script has permissions to read the folders and files.
 #
-sourceDir[1]=/home/user/
-
+sourceDir=(
+/home/user
+/etc
+)
 
 ##### DIRECTORIES AND FILES TO EXCLUDE FROM THE BACKUP #####
-# - To exclude a directory or file, just add a line like "rsyncExcludes[x]=/folder/or/file.txt",
-#  where "x" is a number higher than the existing ones.
+# - To exclude a directory or file, just add a new line to the rsyncExludes array.
 #
-rsyncExcludes[1]=Cache
-rsyncExcludes[2]=cache
-rsyncExcludes[3]=Logs
-rsyncExcludes[4]=logs
-rsyncExcludes[5]=*.log*
+rsyncExcludes=(
+Cache
+cache
+Logs
+logs
+Temp
+temp
+Tmp
+tmp
+*.log*
+)
 
 
 ##### BACKUP FILES FROM FTP #####
@@ -103,6 +109,13 @@ sqlDir="databases"
 # - Full path to the directory where the root fs will be cloned to, otherwise leave unset.
 #
 cloneDir="/mnt/backupfs/"
+#
+### Mountpoints to mount before clonning the root fs. Will be umounted after post cloning script is done
+cloneDirMounts=(
+11111111-2222-3333-4444-555555555555,/mnt/backupfs,ext4,noatime
+66666666-7777-8888-9999-000000000000,/mnt/backupfs/boot,ext4,noatime
+AAAA-BBBB,/mnt/backupfs/boot/efi,vfat
+)
 #
 ### POST CLONING SCRIPT
 # - Script to run after cloning the root filesystem

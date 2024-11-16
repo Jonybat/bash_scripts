@@ -310,6 +310,9 @@ fi
 
 ### Root FS clone
 if [[ -n $cloneDir ]]; then
+  . /opt/scripts/shmount.sh
+
+  mount_mounts "${cloneDirMounts[@]}"
   rsync $rsyncArgsRoot / "$cloneDir"
   warning_catch "The root filesystem cloning to '$cloneDir' ended with errors." "The root filesystem cloning to '$cloneDir' ended successfully."
   rsync $rsyncArgsAll / "$cloneDir"
@@ -319,6 +322,7 @@ if [[ -n $cloneDir ]]; then
     $cloneDirScript $cloneDir
     warning_catch "The backup filesystem installation script terminated with errors." "The backup filesystem installation script terminated successfully."
   fi
+  umount_mounts "${cloneDirMounts[@]}"
 fi
 
 ### Output final script report
