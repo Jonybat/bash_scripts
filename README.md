@@ -35,6 +35,14 @@ Script to be sourced from other scripts. Provides `mount_mounts` and `umount_mou
 
 ---
 
+### `shrans.sh`
+
+Script to be sourced from other scripts. Provides `shrans_init` and `shrans_check` functions. Directory provided as single argument, use init to create files and check to check them.
+
+#### Usage: `shrans_detect /mnt/files`
+
+---
+
 ### `shuser.sh`
 
 Script to be sourced from other scripts. Simple script to make sure script runs as specified user.
