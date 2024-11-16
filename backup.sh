@@ -58,6 +58,7 @@ selectionsPath="$tmpDir/$selectionsFile"
 warning="0"
 error="0"
 settings="0"
+archiveSettings="0"
 totalDirs="0"
 totalFiles="0"
 }
@@ -157,18 +158,21 @@ shlog " "
 if [[ ${#sourceDir[*]} -ne 0 ]]; then
   shlog "Items set to backup: \e[0;32m${#sourceDir[*]}\e[0m - Folders: $totalDirs, Files: $totalFiles"
   settings=$(( $settings + 1 ))
+  archiveSettings=$(( $archiveSettings + 1 ))
 else
   shlog "Items set to backup: \e[0;31m0\e[0m"
 fi
 if [[ $backupFtp -eq 1 ]]; then
   shlog "FTP files backup: \e[0;32mYES\e[0m"
   settings=$(( $settings + 1 ))
+  archiveSettings=$(( $archiveSettings + 1 ))
 else
   shlog "FTP files backup: \e[0;31mNO\e[0m"
 fi
 if [[ $backupMysql -eq 1 ]]; then
   shlog "MySQL database backup: \e[0;32mYES\e[0m"
   settings=$(( $settings + 1 ))
+  archiveSettings=$(( $archiveSettings + 1 ))
 else
   shlog "MySQL database backup: \e[0;31mNO\e[0m"
 fi
@@ -207,60 +211,61 @@ case "$1" in
 # Pass the second argument to the child function and print the current settings
 backup_settings "$2"
 
-mkdir -p "$tmpPath" || critical_exit "Unable to create the temporary directory!"
+# Check if any settings are defined
+if [[ $archiveSettings -ne 0 ]]; then
 
-### Folders and files backup
-for dir in ${!sourceDir[*]}; do
-  if [[ -e ${sourceDir[$dir]} ]]; then
-    rsync $rsyncArgs "${sourceDir[$dir]}" "$tmpPath"
-    warning_catch "The files backup process failed in '${sourceDir[$dir]}'. Check the file permissions." "'${sourceDir[$dir]}' copied successfully."
-  else
-    warning=$(( $warning + 1 ))
-    shlog -s timestamp "\e[0;31mERROR!\e[0m - The files backup process failed in '${sourceDir[$dir]}'. Check if the file exists."
-  fi
-  if [[ $warning -ge ${#sourceDir[*]} ]]; then
-    error=$(( $error + 1 ))
-  fi
-done
+  mkdir -p "$tmpPath" || critical_exit "Unable to create the temporary directory!"
 
-### FTP backup
-if [[ $backupFtp -eq 1 ]]; then
-  if mkdir -p "$ftpPath"; then
-    ncftpget $ftpArgs $ftpHost "$ftpPath" /
-    error_catch "The FTP files backup failed. Check the settings." "All the FTP files were copied successfully."
-  else
-    shlog -s timestamp "\e[0;31mERROR!\e[0m - Unable to create the FTP directory"
-  fi
-fi
-
-### MySQL backup
-if [[ $backupMysql -eq 1 ]]; then
-  if mkdir -p "$sqlPath"; then
-    if [[ $mysqlDb != "-A" ]]; then
-      tmpText="The database '$mysqlDb' was copied successfully'."
-      mysqldump $mysqldumpArgs $mysqlDb > "$sqlPath/$mysqlDb.sql"
+  ### Folders and files backup
+  for dir in ${!sourceDir[*]}; do
+    if [[ -e ${sourceDir[$dir]} ]]; then
+      rsync $rsyncArgs "${sourceDir[$dir]}" "$tmpPath"
+      warning_catch "The files backup process failed in '${sourceDir[$dir]}'. Check the file permissions." "'${sourceDir[$dir]}' copied successfully."
     else
-      tmpText="All the databases were copied successfully to '$sqlPath'."
-      mysql $mysqlArgs -e 'show databases' | while read dbName; do
-        mysqldump $mysqldumpArgs $dbName > "$sqlPath/$dbName.sql"
-        error_catch "The database backup failed on database '$dbName'. Check the database permissions." "The database '$dbName' was copied successfully."
-      done
+      warning=$(( $warning + 1 ))
+      shlog -s timestamp "\e[0;31mERROR!\e[0m - The files backup process failed in '${sourceDir[$dir]}'. Check if the file exists."
     fi
-    error_catch "The MySQL database backup failed. Check the settings." "$tmpText"
-  else
-    shlog -s timestamp "\e[0;31mERROR!\e[0m - Unable to create the SQL directory"
+    if [[ $warning -ge ${#sourceDir[*]} ]]; then
+      error=$(( $error + 1 ))
+    fi
+  done
+
+  ### FTP backup
+  if [[ $backupFtp -eq 1 ]]; then
+    if mkdir -p "$ftpPath"; then
+      ncftpget $ftpArgs $ftpHost "$ftpPath" /
+      error_catch "The FTP files backup failed. Check the settings." "All the FTP files were copied successfully."
+    else
+      shlog -s timestamp "\e[0;31mERROR!\e[0m - Unable to create the FTP directory"
+    fi
   fi
-fi
 
-cd $tmpPath || critical_exit "Unable to change to the temporary directory!"
+  ### MySQL backup
+  if [[ $backupMysql -eq 1 ]]; then
+    if mkdir -p "$sqlPath"; then
+      if [[ $mysqlDb != "-A" ]]; then
+        tmpText="The database '$mysqlDb' was copied successfully'."
+        mysqldump $mysqldumpArgs $mysqlDb > "$sqlPath/$mysqlDb.sql"
+      else
+        tmpText="All the databases were copied successfully to '$sqlPath'."
+        mysql $mysqlArgs -e 'show databases' | while read dbName; do
+          mysqldump $mysqldumpArgs $dbName > "$sqlPath/$dbName.sql"
+          error_catch "The database backup failed on database '$dbName'. Check the database permissions." "The database '$dbName' was copied successfully."
+        done
+      fi
+      error_catch "The MySQL database backup failed. Check the settings." "$tmpText"
+    else
+      shlog -s timestamp "\e[0;31mERROR!\e[0m - Unable to create the SQL directory"
+    fi
+  fi
 
-# Add files from extra commands set in config
-extra_commands
+  cd $tmpPath || critical_exit "Unable to change to the temporary directory!"
 
-cd $tmpDir || critical_exit "Unable to change to the temporary directory!"
+  # Add files from extra commands set in config
+  extra_commands
 
-# Check if any settings are defined, cleanup and exit if not
-if [[ $settings -ne 0 ]]; then
+  cd $tmpDir || critical_exit "Unable to change to the temporary directory!"
+
   # Check if files were backed up to decide if we should archive, move or delete the backup folder
   if [[ -n $(ls $dateStamp) ]]; then
     # Compress the backup files and move to the destination or just move the folder
@@ -281,8 +286,7 @@ if [[ $settings -ne 0 ]]; then
     rm -rf $dateStamp*
   fi
 else
-  rm -rf $dateStamp*
-  critical_exit "Nothing was set to backup!"
+  true || error_catch "Nothing was set to backup!"
 fi
 
 ### Extra backup copy
