@@ -38,6 +38,7 @@ mount | grep -o "on $backupPath/dev type" || mount --bind /dev "$backupPath/dev"
 mount | grep -o "on $backupPath/dev/pts type" || mount --bind /dev/pts "$backupPath/dev/pts"
 mount | grep -o "on $backupPath/proc type" || mount --bind /proc "$backupPath/proc"
 mount | grep -o "on $backupPath/sys type" || mount --bind /sys "$backupPath/sys"
+mount | grep -o "on $backupPath/sys/firmware/efi/efivars type" || mount --bind /sys/firmware/efi/efivars "$backupPath/sys/firmware/efi/efivars"
 mount | grep -o "on $backupPath/run type" || mount --bind /run "$backupPath/run"
 
 # Chroot to the backup dir and install grub
@@ -47,6 +48,7 @@ chroot $backupPath update-grub2 # || error_incr "Failed to update grub settings"
 umount "$backupPath/dev/pts"
 umount "$backupPath/dev"
 umount "$backupPath/proc"
+umount "$backupPath/sys/firmware/efi/efivars"
 umount "$backupPath/sys"
 umount "$backupPath/run"
 
