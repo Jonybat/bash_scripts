@@ -265,7 +265,7 @@ if [[ $settings -ne 0 ]]; then
   if [[ -n $(ls $dateStamp) ]]; then
     # Compress the backup files and move to the destination or just move the folder
     if [[ $tarBackup -eq 1 ]]; then
-      tar $tarArgs $dateStamp | 7za $compressorArgs $compressedFile 2>1 >/dev/null
+      tar $tarArgs $dateStamp | 7za $compressorArgs $compressedFile 2>&1 >/dev/null
       error_catch "Unable to create the 7z file in '$compressedPath'." "The 7z file was created successfully in '$compressedPath'."
       backup_dir_cleanup "$backupDir" $maxDirSize
       mv $compressedFile "$backupDir"
