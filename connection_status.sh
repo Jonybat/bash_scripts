@@ -49,10 +49,10 @@ fi
 
 check_internet (){
 # Check Google IP
-ping -c 1 -I eth0 $internetIP 2>&1 >/dev/null
+ping -c 1 $internetIP 2>&1 >/dev/null
 if [ $? -ne 0 ]; then
   # Check again, since it failed
-  ping -c 10 -I eth0 $internetIP 2>&1 >/dev/null
+  ping -c 10 $internetIP 2>&1 >/dev/null
   if [ $? -ne 0 ]; then
     shlog -s datestamp "IP check: $internetIP - DOWN"
     internetStatus="0"
