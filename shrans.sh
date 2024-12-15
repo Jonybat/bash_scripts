@@ -37,3 +37,15 @@ shrans_init (){
     shlog -s datestamp "Honey files already created"
   fi
 }
+
+if [[ $0 =~ .*shrans ]]; then
+  if [[ $# -eq 0 ]]; then
+    echo "Pass the path to init as the single argument"
+    echo "Usage: shrans.sh /path"
+    exit 1
+  else
+    shrans_init "$1"
+    echo "Now source this script from other script and call 'shrans_check /path'"
+  fi
+fi
+
