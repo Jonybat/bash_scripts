@@ -1,0 +1,32 @@
+# Backup dir
+mainDir=/mnt/borg_backups
+
+# OPTIONAL: Mountpoints to mount before backup. Will be umounted after backup is done
+#backupMounts=(
+#11111111-2222-3333-4444-555555555555,/mnt/backupfs,ext4,noatime
+#66666666-7777-8888-9999-000000000000,/mnt/backupfs/boot,ext4,noatime
+#AAAA-BBBB,/mnt/backupfs/boot/efi,vfat
+#)
+
+# OPTIONAL: Borg password file
+#borgPass=$(cat /root/.borg.pass)
+
+# Borg compression, see: borg help compression
+#borgCompression=auto,lz4
+
+# Borg archive retention, see: borg help prune
+#borgKeepDaily=7
+#borgKeepWeekly=4
+#borgKeepMontly=6
+#borgKeepYearly=5
+
+# Borg repo names, bash array
+repos=('repo1' 'repo2')
+
+# Paths to backup for each repo. Append 'repo_' to the repo name specified above, and add the paths to the bash array
+repo_repo1=('/opt/scripts' '/var/log/scripts')
+repo_repo2=('/home/user')
+
+# OPTIONAL: Directories to check for ransomware before backup, see README for shrans.sh
+#ransChecks=('/opt/scripts' '/home/user')
+

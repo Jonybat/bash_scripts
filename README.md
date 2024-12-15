@@ -96,6 +96,24 @@ Script to install GRUB and fix fstab in a filesystem clone.
 
 ---
 
+### `borg_backup.sh`
+
+Borg backup script with multiple options:
+
+* Multiple borg repo support
+* Only keyfile supported atm, with optional global pass
+* Configurable borg compression and retention
+* Mount destination dir before backup and unmount it after
+* Check for ransomware before backup
+* Status and settings command line options
+* Colored and optional plain text log
+
+See [borg_backup_config.sample](borg_backup_config.sample) for all the options.
+
+#### Usage: `borg_backup.sh [start|status|settings] [config_file]`
+
+---
+
 ### `connection_status.sh`
 
 Script to check network, dns and internet connectivity, and notify or trigger scripts accordingly.
