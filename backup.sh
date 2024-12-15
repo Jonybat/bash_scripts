@@ -55,21 +55,47 @@ sqlPath="$tmpPath/$sqlDir"
 compressedPath="$tmpDir/$compressedFile"
 versionsPath="$tmpDir/$versionsFile"
 selectionsPath="$tmpDir/$selectionsFile"
-warning="0"
-error="0"
-settings="0"
-archiveSettings="0"
-totalDirs="0"
-totalFiles="0"
+warning=0
+error=0
+critical=0
+settings=0
+archiveSettings=0
+totalDirs=0
+totalFiles=0
+}
+
+final_report ()
+{
+shlog " "
+if [[ $critical -ne 0 ]]; then
+  shlog -s datestamp "Backup result: \e[0;31mFAILED\e[0m"
+elif [[ $error -ne 0 ]]; then
+  shlog -s datestamp "Backup result: \e[0;31m$error ERROR(S)\e[0m"
+elif [[ $warning -ne 0 ]]; then
+  shlog -s datestamp "Backup result: \e[0;33m$warning WARNINGS(S)\e[0m"
+else
+  shlog -s datestamp "Backup result: \e[0;32mALL GOOD\e[0m"
+fi
+echo ""
+
+# Get LOGPATH from shlog
+shlog_global_vars -s
+
+### Create a non colored log file if set above
+if [[ -n $plainLog ]]; then
+  plainLogFile="$LOGPATH.plain"
+  cp "$LOGPATH" "$plainLogFile"
+  sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" "$plainLogFile"
+fi
 }
 
 warning_catch ()
 {
 if [[ $? -ne 0 ]]; then
   warning=$(( $warning + 1 ))
-  shlog -s timestamp "\e[0;31mERROR!\e[0m - $1"
+  shlog -s timestamp "\e[0;31mERROR!\e[0m    - $1"
 else
-  shlog -s timestamp "\e[0;32mOK!\e[0m    - $2"
+  shlog -s timestamp "\e[0;32mOK!\e[0m       - $2"
 fi
 }
 
@@ -77,15 +103,17 @@ error_catch ()
 {
 if [[ $? -ne 0 ]]; then
   error=$(( $error + 1 ))
-  shlog -s timestamp "\e[0;31mERROR!\e[0m - $1"
+  shlog -s timestamp "\e[0;31mERROR!\e[0m    - $1"
 else
-  shlog -s timestamp "\e[0;32mOK!\e[0m    - $2"
+  shlog -s timestamp "\e[0;32mOK!\e[0m       - $2"
 fi
 }
 
 critical_exit ()
 {
-shlog -s timestamp "\e[41mCRITICAL!\e[0m    - $1 - TERMINATED"
+shlog -s timestamp "\e[41mCRITICAL!\e[0m - $1"
+critical=1
+final_report
 exit 1
 }
 
@@ -310,9 +338,12 @@ fi
 
 ### Root FS clone
 if [[ -n $cloneDir ]]; then
-  . /opt/scripts/shmount.sh
 
-  mount_mounts "${cloneDirMounts[@]}"
+  if [[ -n $cloneDirMounts ]]; then
+    . /opt/scripts/shmount.sh
+    mount_mounts "${cloneDirMounts[@]}" || critical_exit "Failed to mount clone dir mountpoints!"
+  fi
+
   rsync $rsyncArgsRoot / "$cloneDir"
   warning_catch "The root filesystem cloning to '$cloneDir' ended with errors." "The root filesystem cloning to '$cloneDir' ended successfully."
   rsync $rsyncArgsAll / "$cloneDir"
@@ -322,29 +353,14 @@ if [[ -n $cloneDir ]]; then
     $cloneDirScript $cloneDir
     warning_catch "The backup filesystem installation script terminated with errors." "The backup filesystem installation script terminated successfully."
   fi
-  umount_mounts "${cloneDirMounts[@]}"
+
+  if [[ -n $cloneDirMounts ]]; then
+    umount_mounts "${cloneDirMounts[@]}"
+  fi
 fi
 
 ### Output final script report
-shlog " "
-if [[ $error -ne 0 ]]; then
-  shlog -s datestamp "\e[0;31m$error ERROR(S)\e[0m    - Backup finished with $error error(s)."
-elif [[ $warning -ne 0 ]]; then
-  shlog -s datestamp "\e[0;33m$warning WARNINGS(S)\e[0m - Backup finished with $warning warning(s)."
-else
-  shlog -s datestamp "\e[0;32mALL GOOD\e[0m      - Backup finished successfully."
-fi
-echo ""
-
-# Get LOGPATH from shlog
-shlog_global_vars -s
-
-### Create a non colored log file if set above
-if [[ -n $plainLog ]]; then
-  plainLogFile="$LOGPATH.plain"
-  cp "$LOGPATH" "$plainLogFile"
-  sed -i -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" "$plainLogFile"
-fi
+final_report
 ;;
 
 

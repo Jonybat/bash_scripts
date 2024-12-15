@@ -37,9 +37,9 @@ Script to be sourced from other scripts. Provides `mount_mounts` and `umount_mou
 
 ### `shrans.sh`
 
-Script to be sourced from other scripts. Provides `shrans_init` and `shrans_check` functions. Directory provided as single argument, use init to create files and check to check them.
+Script to be sourced from other scripts. Provides `shrans_init` and `shrans_check` functions. Directory provided as single argument, use init to create the honey files and check to check them.
 
-#### Usage: `shrans_detect /mnt/files`
+#### Usage: `shrans_check /mnt/files`
 
 ---
 

@@ -16,12 +16,12 @@ for MOUNT in "${MOUNTS[@]}"; do
   local MOUNT_OPTS=${MOUNT_ARRAY[3]:=defaults}
 
   if mountpoint -q "$MOUNT_DIR"; then
-    shlog -s datestamp "Notice: $MOUNT_DIR already mounted"
+    shlog -s datestamp "Skipping already mounted '$MOUNT_DIR'"
   else
     sudo mount -t "$MOUNT_FSTYPE" -o "$MOUNT_OPTS" -U "$MOUNT_UUID" "$MOUNT_DIR"
     if [[ $? -ne 0 ]]; then
-      shlog -s datestamp "Failed to mount $MOUNT_DIR. Exiting"
-      exit 1
+      shlog -s datestamp "Failed to mount '$MOUNT_DIR'"
+      return 1
     fi
   fi
 done
@@ -43,8 +43,8 @@ for MOUNT in "${MOUNTS_REV[@]}"; do
   if mountpoint -q "$MOUNT_DIR"; then
     sudo umount -q "$MOUNT_DIR"
     if [[ $? -ne 0 ]]; then
-      shlog -s datestamp "Failed to umount $MOUNT_DIR. Exiting"
-      exit 1
+      shlog -s datestamp "Failed to umount '$MOUNT_DIR'"
+      return 1
     fi
   fi
 done
