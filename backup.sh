@@ -371,13 +371,13 @@ shlog_global_vars -s
 if [[ -e $LOGPATH ]]; then
   if [[ -n $2 ]]; then
     configSafe=$(echo $2 | sed 's/\//\\\//g')
-    awk "/$configSafe/,/finished/" $LOGPATH | grep -i "finished" | tail -n 1
+    awk "/$configSafe/,/Backup result/" $LOGPATH | grep "Backup result" | tail -n 1
   else
     for config in $(grep -Po "(?<=file: ).*" $LOGPATH | sort -u); do
       echo ""
       echo "Last backup from config file: $config"
       configSafe=$(echo $config | sed 's/\//\\\//g')
-      awk "/$configSafe/,/finished/" $LOGPATH | grep -i "finished" | tail -n 1
+      awk "/$configSafe/,/Backup result/" $LOGPATH | grep "Backup result" | tail -n 1
     done
     echo ""
   fi
