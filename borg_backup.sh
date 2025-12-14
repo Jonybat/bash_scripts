@@ -180,9 +180,6 @@ for repo in ${repos[@]}; do
   shlog -s timestamp "Compacting '$repo' repo"
   result=$($borgBin compact --verbose "$repoPath" 2>&1)
   borg_catch "$result"
-
-  #chgrp -R syncthing "$repoPath"
-  #chmod -R u=rwX,g=rX,o= "$repoPath"
 done
 
 postCommands

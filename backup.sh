@@ -31,10 +31,10 @@ done
 rsyncArgs="--quiet --archive --acls --xattrs --force --delete --backup --relative $excludes"
 
 ### RSYNC OPTIONS FOR ROOT FS
-rsyncArgsRoot="--archive --acls --xattrs --update --force --delete --one-file-system --exclude=/dev/* --exclude=/proc/* --exclude=/sys/* --exclude=/tmp/* --exclude=/run/* --exclude=/lost+found"
+rsyncArgsRoot="--archive --acls --xattrs --update --force --delete --one-file-system --exclude=/dev/* --exclude=/proc/* --exclude=/sys/* --exclude=/tmp/* --exclude=/run/* --exclude=/lost+found --exclude=/boot/efi"
 
 ### RSYNC OPTIONS FOR FULL CLONE
-rsyncArgsAll="--archive --acls --xattrs --update --force --delete --exclude=/dev/* --exclude=/proc/* --exclude=/sys/* --exclude=/tmp/* --exclude=/run/* --exclude=/lost+found --exclude=/media/* --exclude=/mnt/*"
+rsyncArgsAll="--archive --acls --xattrs --update --force --delete --exclude=/dev/* --exclude=/proc/* --exclude=/sys/* --exclude=/tmp/* --exclude=/run/* --exclude=/lost+found --exclude=/media/* --exclude=/mnt/* --exclude=/boot/efi"
 
 ### TAR OPTIONS
 tarArgs="--create --preserve-permissions --recursion --remove-files --to-stdout"
