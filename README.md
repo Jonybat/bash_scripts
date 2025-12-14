@@ -105,6 +105,7 @@ Borg backup script with multiple options:
 * Configurable borg compression and retention
 * Mount destination dir before backup and unmount it after
 * Check for ransomware before backup
+* Pre and post backup commands
 * Status and settings command line options
 * Colored and optional plain text log
 

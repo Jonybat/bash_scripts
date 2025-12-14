@@ -139,6 +139,8 @@ if [[ ! -d "$mainDir" ]]; then
   mkdir -p "$mainDir" || critical_exit "Unable to create missing backup directory!"
 fi
 
+preCommands
+
 for repo in ${repos[@]}; do
   repoPath="${mainDir}/${repo}"
   if [[ ! -d "$repoPath" ]]
@@ -178,7 +180,12 @@ for repo in ${repos[@]}; do
   shlog -s timestamp "Compacting '$repo' repo"
   result=$($borgBin compact --verbose "$repoPath" 2>&1)
   borg_catch "$result"
+
+  #chgrp -R syncthing "$repoPath"
+  #chmod -R u=rwX,g=rX,o= "$repoPath"
 done
+
+postCommands
 
 # Unmount previously mounted mountpoints
 if [[ -n $backupMounts ]]; then

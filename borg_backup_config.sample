@@ -30,3 +30,21 @@ repo_repo2=('/home/user')
 # OPTIONAL: Directories to check for ransomware before backup, see README for shrans.sh
 #ransChecks=('/opt/scripts' '/home/user')
 
+# Commands to execute before the backup process starts. Useful to include files that are output of external commands, like database dumps
+preCommands () {
+#mkdir /tmp/backup
+#cd /tmp/backup
+
+#dpkg --get-selections > dpkg-selections.txt
+#dpkg-query -W  --showformat=\${status}$'\t'\${package}$'\t'\${version}$'\t'\${installed-size}$'\n' | column -t > dpkg-versions.txt
+
+true
+}
+
+# Commands to execute after the backup process ends. Useful to changing borg repo ownership and misc cleanup
+postCommands () {
+#rm -rf /tmp/backup
+#chmod -R u=rwX,g=rX,o= "$mainDir"
+
+true
+}
