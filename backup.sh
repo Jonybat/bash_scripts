@@ -359,6 +359,11 @@ if [[ -n $cloneDir ]]; then
   fi
 fi
 
+if [[ $tarBackup -eq 1 ]]; then
+  if [[ -n $tarBackupOwnership ]]; then
+    chown ${tarBackupOwnership} "${backupDir}/${compressedFile}"
+  fi
+fi
 ### Output final script report
 final_report
 ;;

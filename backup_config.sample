@@ -13,6 +13,11 @@ maxDirSize="5000000"
 #
 tarBackup="1"
 #
+### BACKUP FILE OWNERSHIP ###
+# - Ownership to set for the resulting backup file (only for tarBackup=1)
+#
+tarBackupOwnership="owner:group"
+#
 ### TEMPORARY DIRECTORY ###
 # - Full path of the directory where all files will be copied to during the backup.
 #
