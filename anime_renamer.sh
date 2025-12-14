@@ -80,6 +80,10 @@ for line in ${!animeList[*]}; do
 	# Try removing the old directory, will fail if not empty
 	rmdir "$animePath"
       fi
+
+    echo "Sleeping to avoid spamming AniDB"
+    sleep 30
+
     elif [[ $(echo $result | grep -Ei "connect|timeout") ]]; then
       # API timeout
       shlog -s timestamp "API timeout, cannot continue"
