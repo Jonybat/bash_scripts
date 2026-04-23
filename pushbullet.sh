@@ -4,16 +4,20 @@
 #
 ### To be sourced from other scripts
 
-pushbulletBin=/opt/pushbullet/pushbullet
+pushbulletBin=/opt/pushbullet-bash/pushbullet
 
 # Check if the script is being called directly and set invoker var accordingly
 if [[ $0 == *bash ]]; then
-  invoker="$(echo $USER)"
+  if tty -s 2>/dev/null; then
+    INVOKER="${USER:-$(id -un)}"
+  else
+    INVOKER="cron"
+  fi
 else
-  invoker=$(echo $0 | sed 's/.*\///' | sed 's/.sh$//')
+  INVOKER="$(basename "$0" .sh)"
 fi
 
 pushb ()
 {
-$pushbulletBin push all note "[$invoker]" "$(date '+%H:%M') - $1"
+$pushbulletBin push all note "[${INVOKER}@$(hostname)]" "$(date '+%H:%M') - $1"
 }
