@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-### Dynamic DNS updater for namecheap
+### Dynamic DNS updater for cloudflare
 #
-# Requires: wget, dig
+# Requires: curl, dig, jq
 
 . /opt/scripts/shlog.sh
 . /opt/scripts/pushbullet.sh
@@ -14,22 +14,14 @@ resolveAttempts=3
 delay=10
 error=0
 
-updateURL="https://dynamicdns.park-your-domain.com/update?host=$NAMECHEAP_HOST&domain=$NAMECHEAP_DOMAIN&password=$NAMECHEAP_PASSWORD"
-updateResult="/var/tmp/dns_update_result.txt"
-
-# @ means self in namecheap
-if [[ "$NAMECHEAP_HOST" == @ ]]; then
-  dns="$NAMECHEAP_DOMAIN"
-else
-  dns="$NAMECHEAP_HOST.$NAMECHEAP_DOMAIN"
-fi
+dns="$DNS_RECORD"
 
 dns_resolver ()
 {
 while [[ $resolveAttempts -gt 0 ]]; do
   # Get current IP, catches any string in ip format: 0.123.456.789
-  currentIP=$(wget -q -O - http://v4.ipv6-test.com/api/myip.php | grep -o '\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}')
-  # Get old FreeDNS dynamic IP (Main server)
+  currentIP=$(curl --max-time 10 -s -4 ifconfig.me/ip | grep -o '\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}')
+  # Get IP of DNS record
   dnsIP=$(dig +noall +short $dns @1.1.1.1 | grep -o '\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}')
   # Check if any of the resolutions failed
   if [[ $currentIP == "" || $dnsIP == "" ]]; then 
@@ -47,11 +39,23 @@ fi
 
 dns_updater ()
 {
-rm -f "$updateResult"
-wget -q -O "$updateResult" "$updateURL"
+# TTL=1 means auto
+result=$(curl --max-time 10 -s https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records/$CLOUDFLARE_DNS_RECORD_ID \
+    -X PUT \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+    -d '{
+          "name": "'"$dns"'",
+          "ttl": 1,
+          "type": "A",
+          "comment": "Dynamic DNS updater",
+          "content": "'"$currentIP"'",
+          "private_routing": '"$CLOUDFLARE_PRIVATE_ROUTING"',
+          "proxied": '"$CLOUDFLARE_PROXIED_DNS"'
+        }')
 
-updateStatus=$(grep -Po "ErrCount>\K([0-9]+)" "$updateResult")
-updateError=$(grep -Po "Err1>\K(.*)" "$updateResult" | cut -d"<" -f 1)
+updateSuccess=$(echo "$result" | jq '.success')
+updateError=$(echo "$result" | jq -r '.errors[].message')
 updateAttempts=$((updateAttempts-1))
 }
 
@@ -73,12 +77,12 @@ else
     # Update the DNS
     dns_updater
     # Check if it was successful this time
-    if [[ $updateStatus -eq 0 ]]; then
+    if [[ $updateSuccess == 'true' ]]; then
       shlog -s datestamp "Updated successfully"
       break
-    elif [[ $updateAttempts -gt 0 ]]; then
-      shlog -s datestamp "Update failed with: "$updateError", retrying"
-      pushb "Update failed with: "$updateError", retrying"
+    else
+      shlog -s datestamp "Update failed with: $updateError, retrying"
+      pushb "Update failed with: $updateError, retrying"
     fi
   done
   # If the update failed all the attempts defined, set error var to exit script with code 2
