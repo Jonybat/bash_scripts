@@ -22,7 +22,7 @@ while [[ $resolveAttempts -gt 0 ]]; do
   # Get current IP, catches any string in ip format: 0.123.456.789
   currentIP=$(curl --max-time 10 -s -4 ifconfig.me/ip | grep -o '\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}')
   # Get IP of DNS record
-  dnsIP=$(dig +noall +short $dns @1.1.1.1 | grep -o '\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}')
+  dnsIP=$(dig +noall +short "$dns" @1.1.1.1 | grep -o '\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}' | tail -n 1)
   # Check if any of the resolutions failed
   if [[ $currentIP == "" || $dnsIP == "" ]]; then 
   	resolveAttempts=$((resolveAttempts-1))
