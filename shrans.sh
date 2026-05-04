@@ -19,6 +19,7 @@ shrans_check (){
     fi
   else
     shlog -s datestamp "Hashes file is missing"
+    return 1
   fi
 }
 
